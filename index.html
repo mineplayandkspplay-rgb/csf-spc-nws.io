@@ -1000,7 +1000,6 @@
         const drawnItems = L.featureGroup().addTo(map);
         let saveTimer = null;
         let isApplyingRemoteData = false;
-        let initialLoadDone = false;
 
         // ================================================================
         //  3. УПРАВЛЕНИЕ ДНЯМИ
@@ -1384,7 +1383,7 @@
         }
 
         // ================================================================
-        //  8. СОХРАНЕНИЕ ТОЛЬКО В FIREBASE (плюс обновление URL для шаринга)
+        //  8. СОХРАНЕНИЕ ТОЛЬКО В FIREBASE
         // ================================================================
         function saveData() {
             if (!firebaseInitialized || !db) {
@@ -1394,7 +1393,6 @@
             db.ref('forecast').set(store)
                 .then(() => {
                     console.log('✅ Данные сохранены в Firebase');
-                    // обновляем URL для шаринга (опционально)
                     updateURL();
                 })
                 .catch(err => {
@@ -1404,7 +1402,7 @@
         }
 
         // ================================================================
-        //  9. ЗАГРУЗКА ТОЛЬКО ИЗ FIREBASE
+        //  9. ЗАГРУЗКА ИЗ FIREBASE (только один раз при старте)
         // ================================================================
         function loadFromFirebase() {
             return new Promise((resolve) => {
@@ -1422,7 +1420,7 @@
                         store.lastDayShift = val.lastDayShift || Date.now();
                         resolve(true);
                     } else {
-                        resolve(false); // в Firebase пусто
+                        resolve(false);
                     }
                 }).catch(err => {
                     console.error('❌ Ошибка чтения из Firebase:', err);
@@ -1431,34 +1429,8 @@
             });
         }
 
-        function applyLoadedData(data) {
-            if (!data || !data.day1 || !data.day2 || !data.day3) return;
-            // Проверяем, изменились ли данные
-            const current = {
-                day1: store.day1,
-                day2: store.day2,
-                day3: store.day3,
-                lastDayShift: store.lastDayShift
-            };
-            const currentStr = JSON.stringify(current);
-            const newStr = JSON.stringify({
-                day1: data.day1,
-                day2: data.day2,
-                day3: data.day3,
-                lastDayShift: data.lastDayShift || Date.now()
-            });
-            if (currentStr === newStr) return; // нет изменений
-
-            store.day1 = data.day1;
-            store.day2 = data.day2;
-            store.day3 = data.day3;
-            store.lastDayShift = data.lastDayShift || Date.now();
-            loadDay(currentDay);
-            showToast('📥 Данные обновлены из облака');
-        }
-
         // ================================================================
-        //  10. УПРАВЛЕНИЕ URL (только для шаринга, НЕ для загрузки)
+        //  10. УПРАВЛЕНИЕ URL (только для шаринга)
         // ================================================================
         function encodeAllDataToURL() {
             const json = JSON.stringify(store);
@@ -1473,7 +1445,7 @@
         }
 
         // ================================================================
-        //  11. АВТОСОХРАНЕНИЕ С ЗАДЕРЖКОЙ
+        //  11. АВТОСОХРАНЕНИЕ (только локальное сохранение)
         // ================================================================
         function scheduleSave() {
             if (saveTimer) clearTimeout(saveTimer);
@@ -1485,20 +1457,18 @@
         }
 
         // ================================================================
-        //  12. ИНИЦИАЛИЗАЦИЯ
+        //  12. ИНИЦИАЛИЗАЦИЯ (без подписки на изменения)
         // ================================================================
         async function init() {
             shiftDaysIfNeeded();
 
-            // Загружаем из Firebase
+            // Загружаем из Firebase один раз
             const hasData = await loadFromFirebase();
             if (!hasData) {
-                // Если в Firebase пусто, оставляем дефолтный пустой прогноз
                 console.log('ℹ️ В Firebase нет данных, создаём пустой прогноз');
-                // но не перезаписываем store – он уже дефолтный
             }
 
-            // После загрузки отображаем текущий день
+            // Отображаем текущий день
             loadDay(currentDay);
 
             // Авторизация
@@ -1513,19 +1483,8 @@
             }
             updateDayTitle();
 
-            // Подписываемся на изменения в Firebase (реальное время)
-            if (firebaseInitialized && db) {
-                db.ref('forecast').on('value', snapshot => {
-                    const val = snapshot.val();
-                    if (val) {
-                        if (!isApplyingRemoteData) {
-                            isApplyingRemoteData = true;
-                            applyLoadedData(val);
-                            setTimeout(() => { isApplyingRemoteData = false; }, 100);
-                        }
-                    }
-                });
-            }
+            // ⛔ УБРАНО: подписка на изменения в Firebase (db.ref('forecast').on(...))
+            // теперь обновления только при загрузке страницы или при ручном нажатии "Опубликовать"
 
             setTimeout(setTooltips, 200);
         }
@@ -1636,7 +1595,7 @@
         }
 
         // ================================================================
-        //  14. ВХОД
+        //  14. ВХОД (без изменений)
         // ================================================================
         document.getElementById('authBtn').addEventListener('click', function() {
             if (isAuthorized) {
@@ -1692,7 +1651,6 @@
             showToast('💾 Прогноз сохранён в Firebase');
         });
 
-        // Новая кнопка "Опубликовать" – явное сохранение и уведомление
         document.getElementById('publishBtn').addEventListener('click', function() {
             if (!isAuthorized) { showToast('⚠️ Войдите для публикации'); return; }
             saveCurrentDayData();
@@ -1702,7 +1660,7 @@
 
         document.getElementById('shareBtn').addEventListener('click', function() {
             saveCurrentDayData();
-            saveData(); // сначала сохраняем, потом формируем ссылку
+            saveData();
             const encoded = encodeAllDataToURL();
             const url = new URL(window.location);
             url.searchParams.set('data', encoded);
@@ -1715,7 +1673,7 @@
         });
 
         // ================================================================
-        //  16. ОБРАБОТЧИК РИСОВАНИЯ (без изменений)
+        //  16. ОБРАБОТЧИК РИСОВАНИЯ (полный, без изменений)
         // ================================================================
         map.on(L.Draw.Event.CREATED, function(e) {
             if (!isAuthorized) {
@@ -1933,11 +1891,181 @@
         });
 
         // ================================================================
-        //  17. ДРУГИЕ КНОПКИ (сглаживание, удаление, очистка, экспорт/импорт)
+        //  17. ОСТАЛЬНЫЕ КНОПКИ (сглаживание, удаление, очистка, экспорт/импорт)
         // ================================================================
-        // (код остаётся без изменений, он есть в предыдущей версии, я его не переписываю для краткости,
-        // но он полностью сохраняется в финальном файле)
-        // См. полный код ниже.
+        document.getElementById('smoothBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
+            const layers = drawnItems.getLayers();
+            if (layers.length === 0) { alert('Нет полигонов для сглаживания.'); return; }
+            let count = 0;
+            layers.forEach(layer => {
+                if (layer instanceof L.Polygon) {
+                    const latlngs = layer.getLatLngs()[0];
+                    if (!latlngs || latlngs.length < 4) return;
+                    const coords = latlngs.map(p => [p.lng, p.lat]);
+                    if (coords[0][0] !== coords[coords.length - 1][0] ||
+                        coords[0][1] !== coords[coords.length - 1][1]) {
+                        coords.push([coords[0][0], coords[0][1]]);
+                    }
+                    try {
+                        const poly = turf.polygon([coords]);
+                        const smoothed = turf.bezierSpline(poly, { resolution: 10000, sharpness: 0.85 });
+                        const newCoords = smoothed.geometry.coordinates[0].map(c => [c[1], c[0]]);
+                        const origColor = layer.options._origColor || layer.options.color || '#ffaa33';
+                        const dash = layer.options.dashArray || null;
+                        const isHatch = layer.options._hatch || false;
+                        const hatchColor = layer.options._hatchColor || origColor;
+                        const newPoly = L.polygon(newCoords, {
+                            color: origColor,
+                            weight: layer.options.weight || 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25,
+                            dashArray: dash,
+                            _origColor: origColor,
+                            fillColor: origColor
+                        });
+                        if (isHatch) {
+                            const patternId = ensureHatchPattern(hatchColor);
+                            newPoly.setStyle({
+                                fill: true,
+                                fillColor: `url(#${patternId})`,
+                                fillOpacity: 1,
+                                color: hatchColor,
+                                weight: 2,
+                                opacity: 0.9
+                            });
+                            newPoly.options._hatch = true;
+                            newPoly.options._hatchColor = hatchColor;
+                        }
+                        if (layer.getPopup()) newPoly.bindPopup(layer.getPopup().getContent());
+                        drawnItems.removeLayer(layer);
+                        drawnItems.addLayer(newPoly);
+                        count++;
+                    } catch (e) { console.warn('Сглаживание не удалось:', e); }
+                }
+            });
+            if (count > 0) { saveCurrentDayData();
+                scheduleSave();
+                showToast(`✅ Сглажено ${count} полигонов`); } else { alert('Нет подходящих полигонов.'); }
+        });
+
+        document.getElementById('deleteSelectedBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
+            const layers = drawnItems.getLayers();
+            if (layers.length === 0) { alert('Нет фигур для удаления.'); return; }
+            layers.forEach(l => drawnItems.removeLayer(l));
+            saveCurrentDayData();
+            scheduleSave();
+            showToast('🗑️ Выделенные фигуры удалены');
+        });
+
+        document.getElementById('clearAllBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
+            if (!confirm('Удалить ВСЕ фигуры и слои?')) return;
+            drawnItems.clearLayers();
+            Object.values(riskLayers).forEach(g => g.clearLayers());
+            saveCurrentDayData();
+            scheduleSave();
+            showToast('🧹 Все слои очищены');
+        });
+
+        document.getElementById('exportGeoJSON').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для экспорта'); return; }
+            saveCurrentDayData();
+            const fc = getAllFeatures();
+            const blob = new Blob([JSON.stringify({ type: 'FeatureCollection', features: fc }, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `CSF_day${currentDay}_${new Date().toISOString().slice(0,10)}.geojson`;
+            a.click();
+            URL.revokeObjectURL(url);
+            showToast('📤 GeoJSON экспортирован');
+        });
+
+        document.getElementById('importGeoJSON').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для импорта'); return; }
+            document.getElementById('fileInput').click();
+        });
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (data.type !== 'FeatureCollection') { alert('Неверный формат'); return; }
+                    Object.values(riskLayers).forEach(g => g.clearLayers());
+                    drawnItems.clearLayers();
+                    data.features.forEach(f => {
+                        if (!f.geometry) return;
+                        const props = f.properties || {};
+                        const style = props._style || {
+                            color: '#ffaa33',
+                            weight: 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25,
+                            _origColor: '#ffaa33',
+                            _hatch: false,
+                            _hatchColor: '#ffaa33'
+                        };
+                        const layer = L.geoJSON(f, {
+                            style: function() {
+                                return {
+                                    color: style.color || '#ffaa33',
+                                    weight: style.weight || 2,
+                                    opacity: style.opacity || 0.9,
+                                    fillOpacity: style.fillOpacity || 0.25,
+                                    dashArray: style.dashArray || null,
+                                    fillColor: style.fillColor || style.color || '#ffaa33'
+                                };
+                            }
+                        });
+                        const origColor = style._origColor || style.color || '#ffaa33';
+                        layer.options._origColor = origColor;
+                        layer.eachLayer(sub => {
+                            sub.options._origColor = origColor;
+                            if (style.dashArray) sub.options.dashArray = style.dashArray;
+                            else delete sub.options.dashArray;
+                        });
+                        if (style._hatch === true) {
+                            const hatchColor = style._hatchColor || origColor;
+                            const patternId = ensureHatchPattern(hatchColor);
+                            layer.setStyle({
+                                fill: true,
+                                fillColor: `url(#${patternId})`,
+                                fillOpacity: 1,
+                                color: hatchColor,
+                                weight: 2,
+                                opacity: 0.9
+                            });
+                            layer.options._hatch = true;
+                            layer.options._hatchColor = hatchColor;
+                            layer.eachLayer(sub => {
+                                sub.options._hatch = true;
+                                sub.options._hatchColor = hatchColor;
+                                sub.options.fillColor = `url(#${patternId})`;
+                                sub.options.fillOpacity = 1;
+                            });
+                        }
+                        if (props._popup) {
+                            layer.bindPopup(props._popup);
+                        }
+                        const key = props._layer || 'categorical';
+                        if (riskLayers[key]) {
+                            riskLayers[key].addLayer(layer);
+                        } else {
+                            drawnItems.addLayer(layer);
+                        }
+                    });
+                    saveCurrentDayData();
+                    scheduleSave();
+                    showToast('✅ Импорт завершён');
+                } catch (err) { alert('Ошибка импорта: ' + err.message); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
 
         // ================================================================
         //  18. ЛЕГЕНДА И ТОСТ
@@ -2001,9 +2129,10 @@
         //  21. ЗАПУСК
         // ================================================================
         init();
-        console.log('✅ CSF | SPC Russia — карта загружена, синхронизация через Firebase (только)');
+        console.log('✅ CSF | SPC Russia — карта загружена, синхронизация через Firebase (только при старте)');
         console.log('🔐 Редактирование доступно только после входа (пароль скрыт)');
         console.log('📤 Кнопка "Опубликовать" отправляет данные в Firebase');
+        console.log('⛔ Автоматическое обновление отключено — обновляйте страницу вручную');
     </script>
 </body>
 </html>
