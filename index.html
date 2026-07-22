@@ -1,0 +1,1296 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CSF | SPC Прогнозы — Россия</title>
+
+    <!-- Leaflet CSS + JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
+    </script>
+
+    <!-- Leaflet Draw -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
+    <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js">
+    </script>
+
+    <!-- Turf.js -->
+    <script src="https://unpkg.com/@turf/turf@6/turf.min.js">
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: #0b0f1a;
+            color: #e0e8f0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            user-select: none;
+        }
+
+        .topbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 8px;
+            padding: 4px 10px;
+            background: #141c2b;
+            border-bottom: 2px solid #2a3a5a;
+            flex-shrink: 0;
+            z-index: 10;
+            font-size: 0.75rem;
+        }
+        .topbar .brand {
+            font-weight: 700;
+            font-size: 1rem;
+            background: linear-gradient(135deg, #ffb347, #ff6b4a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+            margin-right: 4px;
+        }
+        .topbar .brand small {
+            font-weight: 400;
+            font-size: 0.6rem;
+            -webkit-text-fill-color: #8899bb;
+            background: none;
+        }
+        .topbar label {
+            font-size: 0.7rem;
+            color: #aabbdd;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .topbar select,
+        .topbar input[type="color"] {
+            background: #1e2a3e;
+            border: 1px solid #3a4a6a;
+            color: #e0e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .topbar input[type="color"] {
+            width: 24px;
+            height: 24px;
+            padding: 1px;
+            border-radius: 50%;
+        }
+        .topbar .btn {
+            background: #1e2a3e;
+            border: 1px solid #3a4a6a;
+            color: #c0d0ee;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .topbar .btn:hover {
+            background: #2a3a5a;
+            border-color: #5a7aaa;
+        }
+        .topbar .btn.danger:hover {
+            background: #6a2a2a;
+            border-color: #aa4a4a;
+        }
+        .topbar .btn.share-btn {
+            background: #2a5a3a;
+            border-color: #4a8a5a;
+        }
+        .topbar .btn.share-btn:hover {
+            background: #3a7a4a;
+        }
+        .topbar .sep {
+            width: 1px;
+            height: 20px;
+            background: #2a3a5a;
+            flex-shrink: 0;
+        }
+        .risk-select {
+            background: #1e2a3e;
+            border: 1px solid #3a4a6a;
+            color: #e0e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .risk-label {
+            font-size: 0.6rem;
+            color: #8899bb;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* ----- КНОПКИ СЛОЁВ ----- */
+        .layer-toggles {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .layer-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: #1e2a3e;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            padding: 1px 6px 1px 4px;
+            font-size: 0.6rem;
+            color: #8899bb;
+            cursor: pointer;
+            transition: 0.15s;
+            white-space: nowrap;
+            font-weight: 600;
+            height: 22px;
+        }
+        .layer-toggle-btn .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .layer-toggle-btn.active {
+            border-color: #8ab4f8;
+            background: #1e304a;
+            color: #e0e8f0;
+        }
+        .layer-toggle-btn.active .dot {
+            border-color: #8ab4f8;
+        }
+        .layer-toggle-btn:hover {
+            background: #2a3a5a;
+        }
+        .layer-toggle-btn .label-text {
+            font-size: 0.55rem;
+            letter-spacing: 0.3px;
+        }
+        .layer-toggle-btn .badge {
+            font-size: 0.5rem;
+            background: #2a3a5a;
+            padding: 0 4px;
+            border-radius: 8px;
+            color: #8899bb;
+        }
+        .layer-toggle-btn.active .badge {
+            background: #3a5a7a;
+            color: #c0d0ee;
+        }
+
+        #map {
+            flex: 1;
+            width: 100%;
+            background: #0b0f1a;
+        }
+
+        .legend-toggle {
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            z-index: 1000;
+            background: #141c2b;
+            border: 1px solid #2a3a5a;
+            border-radius: 8px;
+            padding: 4px 10px;
+            color: #c0d0ee;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+        .legend-toggle:hover {
+            background: #1e2a3e;
+        }
+        .legend-panel {
+            position: absolute;
+            bottom: 70px;
+            right: 10px;
+            z-index: 1000;
+            background: #141c2be6;
+            backdrop-filter: blur(8px);
+            border: 1px solid #2a3a5a;
+            border-radius: 10px;
+            padding: 10px 14px;
+            min-width: 200px;
+            display: none;
+            font-size: 0.65rem;
+            color: #c0d0ee;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .legend-panel.show {
+            display: block;
+        }
+        .legend-panel .item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 0;
+        }
+        .legend-panel .color-box {
+            width: 16px;
+            height: 10px;
+            border-radius: 2px;
+            border: 1px solid #3a4a6a;
+            flex-shrink: 0;
+        }
+        .legend-panel .label {
+            font-weight: 500;
+            font-size: 0.7rem;
+        }
+        .legend-panel .sub {
+            color: #8899bb;
+            font-size: 0.55rem;
+        }
+        .legend-panel .section-title {
+            font-weight: 700;
+            margin: 4px 0 2px 0;
+            color: #e0e8f0;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #2a3a5a;
+            padding-bottom: 2px;
+        }
+        .legend-panel .hatch-sample {
+            background: repeating-linear-gradient(45deg, #ffaa00 0px, #ffaa00 3px, transparent 3px, transparent 6px);
+            border-color: #ffaa00;
+        }
+
+        @media (max-width: 820px) {
+            .topbar .brand {
+                font-size: 0.8rem;
+            }
+            .topbar .sep {
+                display: none;
+            }
+            .topbar label {
+                font-size: 0.6rem;
+            }
+            .topbar .btn {
+                font-size: 0.55rem;
+                padding: 2px 6px;
+            }
+            .risk-select {
+                font-size: 0.6rem;
+                min-width: 50px;
+            }
+            .risk-label {
+                font-size: 0.5rem;
+            }
+            .layer-toggle-btn .label-text {
+                display: none;
+            }
+            .layer-toggle-btn .badge {
+                display: none;
+            }
+            .layer-toggle-btn {
+                padding: 1px 4px;
+            }
+        }
+        @media (max-width: 600px) {
+            .topbar {
+                gap: 2px 4px;
+                padding: 3px 6px;
+            }
+            .topbar .brand {
+                font-size: 0.7rem;
+                margin-right: 2px;
+            }
+            .topbar .brand small {
+                font-size: 0.5rem;
+            }
+            .topbar .btn {
+                font-size: 0.5rem;
+                padding: 1px 5px;
+            }
+            .layer-toggle-btn .dot {
+                width: 8px;
+                height: 8px;
+            }
+            .layer-toggle-btn {
+                height: 18px;
+                font-size: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== TOPBAR ===== -->
+    <div class="topbar">
+        <div class="brand">CSF <small>| SPC Russia</small></div>
+
+        <!-- ===== КНОПКИ ПЕРЕКЛЮЧЕНИЯ СЛОЁВ ===== -->
+        <div class="layer-toggles" id="layerToggles">
+            <button class="layer-toggle-btn active" data-layer="categorical" title="Конвективный риск">
+                <span class="dot" style="background:#e8943a;"></span>
+                <span class="label-text">Конв.</span>
+                <span class="badge">⚡</span>
+            </button>
+            <button class="layer-toggle-btn active" data-layer="tornado" title="Риск смерча">
+                <span class="dot" style="background:#ab47bc;"></span>
+                <span class="label-text">Смерч</span>
+                <span class="badge">🌪️</span>
+            </button>
+            <button class="layer-toggle-btn active" data-layer="wind" title="Риск ветра">
+                <span class="dot" style="background:#fdd835;"></span>
+                <span class="label-text">Ветер</span>
+                <span class="badge">💨</span>
+            </button>
+            <button class="layer-toggle-btn active" data-layer="warnings" title="Метео предупреждения">
+                <span class="dot" style="background:#ff3333;"></span>
+                <span class="label-text">Предупр.</span>
+                <span class="badge">⚠️</span>
+            </button>
+        </div>
+
+        <span class="sep"></span>
+
+        <label>🎨 Тема
+            <select id="themeSelect">
+                <option value="dark">Тёмная</option>
+                <option value="light">Светлая</option>
+                <option value="satellite">Спутник</option>
+                <option value="terrain">Рельеф</option>
+            </select>
+        </label>
+
+        <span class="sep"></span>
+
+        <span class="risk-label">⚡ Конвективный</span>
+        <select class="risk-select" id="convectiveSelect">
+            <option value="#66bb66">TSTM</option>
+            <option value="#44aa44">MRGL</option>
+            <option value="#e8e84a">SLGT</option>
+            <option value="#e8943a" selected>ENH</option>
+            <option value="#dd4444">MDT</option>
+            <option value="#cc44cc">HIGH</option>
+        </select>
+
+        <span class="risk-label">🌪️ Смерч</span>
+        <select class="risk-select" id="tornadoSelect">
+            <option value="#4caf50">2%</option>
+            <option value="#8d6e63">5%</option>
+            <option value="#fdd835">10%</option>
+            <option value="#e53935">15%</option>
+            <option value="#ab47bc">30%</option>
+            <option value="#7b1fa2">45%</option>
+            <option value="#1a237e">60%</option>
+            <option value="#ffaa00">ШТРИХ</option>
+        </select>
+
+        <span class="risk-label">💨 Ветер</span>
+        <select class="risk-select" id="windSelect">
+            <option value="#8d6e63">5%</option>
+            <option value="#fdd835">15%</option>
+            <option value="#e53935">30%</option>
+            <option value="#ab47bc">45%</option>
+            <option value="#7b1fa2">60%</option>
+            <option value="#ffaa00">ШТРИХ</option>
+        </select>
+
+        <span class="risk-label">⚠️ Предупреждения</span>
+        <select class="risk-select" id="warningSelect">
+            <option value="#ffcc00">Severe T-storm</option>
+            <option value="#ff3333">Tornado</option>
+            <option value="#cc00cc">Tornado Emergency</option>
+            <option value="#3399ff">Flash Flood</option>
+            <option value="#33cc99">Marine</option>
+        </select>
+
+        <span class="sep"></span>
+
+        <label>✏️ Инструмент
+            <select id="drawTool">
+                <option value="polygon">Полигон</option>
+                <option value="rectangle">Прямоугольник</option>
+                <option value="circle">Круг</option>
+                <option value="marker">Маркер</option>
+            </select>
+        </label>
+
+        <label>🖍️ Цвет
+            <input type="color" id="drawColor" value="#e8943a" />
+        </label>
+
+        <button class="btn" id="smoothBtn">🔮 Сгладить</button>
+        <button class="btn danger" id="deleteSelectedBtn">🗑️</button>
+        <button class="btn" id="clearAllBtn">🧹</button>
+
+        <span class="sep"></span>
+
+        <label>👤 Синоптик
+            <input class="synoptic-input" id="synopticName" placeholder="Ваше имя" value="CSF" style="background:#0b121f;border:1px solid #3a4a6a;color:#e0e8f0;padding:2px 6px;border-radius:4px;font-size:0.7rem;min-width:90px;" />
+        </label>
+
+        <button class="btn share-btn" id="shareBtn">📋 Скопировать ссылку</button>
+        <button class="btn" id="loadUrlBtn">🔄 Обновить из URL</button>
+
+        <button class="btn" id="exportGeoJSON">📤 Export</button>
+        <button class="btn" id="importGeoJSON">📥 Import</button>
+        <input type="file" id="fileInput" accept=".geojson,.json" style="display:none" />
+    </div>
+
+    <!-- ===== КАРТА ===== -->
+    <div id="map"></div>
+
+    <!-- ===== ЛЕГЕНДА ===== -->
+    <div class="legend-toggle" id="legendToggle">📖 Легенда</div>
+    <div class="legend-panel" id="legendPanel">
+        <div class="section-title">⚡ Конвективный риск</div>
+        <div class="item"><span class="color-box" style="background:#66bb66;"></span><span class="label">TSTM</span><span class="sub">— грозы</span></div>
+        <div class="item"><span class="color-box" style="background:#44aa44;"></span><span class="label">MRGL</span><span class="sub">— маргинальный</span></div>
+        <div class="item"><span class="color-box" style="background:#e8e84a;"></span><span class="label">SLGT</span><span class="sub">— небольшой</span></div>
+        <div class="item"><span class="color-box" style="background:#e8943a;"></span><span class="label">ENH</span><span class="sub">— усиленный</span></div>
+        <div class="item"><span class="color-box" style="background:#dd4444;"></span><span class="label">MDT</span><span class="sub">— умеренный</span></div>
+        <div class="item"><span class="color-box" style="background:#cc44cc;"></span><span class="label">HIGH</span><span class="sub">— высокий</span></div>
+
+        <div class="section-title">🌪️ Вероятность смерча (SPC)</div>
+        <div class="item"><span class="color-box" style="background:#4caf50;"></span><span class="label">2%</span><span class="sub">(See Text)</span></div>
+        <div class="item"><span class="color-box" style="background:#8d6e63;"></span><span class="label">5%</span><span class="sub">(SLGT)</span></div>
+        <div class="item"><span class="color-box" style="background:#fdd835;"></span><span class="label">10%</span><span class="sub">(SLGT)</span></div>
+        <div class="item"><span class="color-box" style="background:#e53935;"></span><span class="label">15%</span><span class="sub">(MDT)</span></div>
+        <div class="item"><span class="color-box" style="background:#ab47bc;"></span><span class="label">30%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:#7b1fa2;"></span><span class="label">45%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:#1a237e;"></span><span class="label">60%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:repeating-linear-gradient(45deg, #ffaa00 0px, #ffaa00 3px, transparent 3px, transparent 6px); border-color: #ffaa00;"></span><span class="label">ШТРИХ</span><span class="sub">(значит. EF2+)</span></div>
+
+        <div class="section-title">💨 Вероятность ветра (SPC)</div>
+        <div class="item"><span class="color-box" style="background:#8d6e63;"></span><span class="label">5%</span><span class="sub">(See Text)</span></div>
+        <div class="item"><span class="color-box" style="background:#fdd835;"></span><span class="label">15%</span><span class="sub">(SLGT)</span></div>
+        <div class="item"><span class="color-box" style="background:#e53935;"></span><span class="label">30%</span><span class="sub">(ENH)</span></div>
+        <div class="item"><span class="color-box" style="background:#ab47bc;"></span><span class="label">45%</span><span class="sub">(MDT)</span></div>
+        <div class="item"><span class="color-box" style="background:#7b1fa2;"></span><span class="label">60%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:repeating-linear-gradient(45deg, #ffaa00 0px, #ffaa00 3px, transparent 3px, transparent 6px); border-color: #ffaa00;"></span><span class="label">ШТРИХ</span><span class="sub">(порывы ≥ 65 узлов)</span></div>
+
+        <div class="section-title">⚠️ Предупреждения</div>
+        <div class="item"><span class="color-box" style="background:#ffcc00;"></span>Severe T-storm</div>
+        <div class="item"><span class="color-box" style="background:#ff3333;"></span>Tornado</div>
+        <div class="item"><span class="color-box" style="background:#cc00cc;"></span>Tornado Emergency</div>
+        <div class="item"><span class="color-box" style="background:#3399ff;"></span>Flash Flood</div>
+        <div class="item"><span class="color-box" style="background:#33cc99;"></span>Marine</div>
+        <div class="section-title" style="margin-top:6px;">📚 Слои</div>
+        <div class="item"><span class="color-box" style="background:#e8943a;"></span>Конвективный риск</div>
+        <div class="item"><span class="color-box" style="background:#ab47bc;"></span>Риск смерча</div>
+        <div class="item"><span class="color-box" style="background:#fdd835;"></span>Риск ветра</div>
+        <div class="item"><span class="color-box" style="background:#ff3333;"></span>Метео предупреждения</div>
+    </div>
+
+    <script>
+        // ================================================================
+        //  1. КАРТА
+        // ================================================================
+        const map = L.map('map', {
+            center: [62.0, 90.0],
+            zoom: 3,
+            zoomControl: true,
+            attributionControl: true,
+        });
+
+        const tileLayers = {
+            dark: L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB'
+            }),
+            light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+                attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB'
+            }),
+            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                attribution: '&copy; Esri'
+            }),
+            terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenTopoMap'
+            })
+        };
+        tileLayers.dark.addTo(map);
+        document.getElementById('themeSelect').addEventListener('change', function(e) {
+            Object.values(tileLayers).forEach(l => map.removeLayer(l));
+            tileLayers[e.target.value].addTo(map);
+        });
+
+        // ================================================================
+        //  2. СВЯЗКА СЕЛЕКТОРОВ → ЦВЕТ
+        // ================================================================
+        const convSel = document.getElementById('convectiveSelect');
+        const torSel = document.getElementById('tornadoSelect');
+        const windSel = document.getElementById('windSelect');
+        const warnSel = document.getElementById('warningSelect');
+        const drawColor = document.getElementById('drawColor');
+
+        function updateColor() {
+            const active = document.activeElement;
+            let color = convSel.value;
+            if (active === torSel) color = torSel.value;
+            else if (active === windSel) color = windSel.value;
+            else if (active === warnSel) color = warnSel.value;
+            else color = convSel.value;
+            drawColor.value = color;
+            if (drawControl && drawControl._toolbars && drawControl._toolbars.draw) {
+                const modes = drawControl._toolbars.draw._modes;
+                if (modes.polygon) modes.polygon.handler.options.shapeOptions.color = color;
+                if (modes.rectangle) modes.rectangle.handler.options.shapeOptions.color = color;
+                if (modes.circle) modes.circle.handler.options.shapeOptions.color = color;
+            }
+        }
+
+        convSel.addEventListener('change', updateColor);
+        torSel.addEventListener('change', updateColor);
+        windSel.addEventListener('change', updateColor);
+        warnSel.addEventListener('change', updateColor);
+        drawColor.value = convSel.value;
+
+        // ================================================================
+        //  3. СЛОИ РИСКОВ (feature groups)
+        // ================================================================
+        const riskLayers = {
+            categorical: L.featureGroup().addTo(map),
+            tornado: L.featureGroup().addTo(map),
+            wind: L.featureGroup().addTo(map),
+            warnings: L.featureGroup().addTo(map),
+        };
+
+        // ================================================================
+        //  4. УПРАВЛЕНИЕ ВИДИМОСТЬЮ СЛОЁВ (кнопки в топбаре)
+        // ================================================================
+        const layerToggleBtns = document.querySelectorAll('.layer-toggle-btn');
+
+        function updateLayerVisibility() {
+            layerToggleBtns.forEach(btn => {
+                const key = btn.dataset.layer;
+                const group = riskLayers[key];
+                const active = btn.classList.contains('active');
+                if (active) {
+                    if (!map.hasLayer(group)) map.addLayer(group);
+                } else {
+                    if (map.hasLayer(group)) map.removeLayer(group);
+                }
+            });
+            updateURL();
+        }
+
+        layerToggleBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                this.classList.toggle('active');
+                updateLayerVisibility();
+            });
+        });
+
+        // ================================================================
+        //  5. ИНСТРУМЕНТЫ РИСОВАНИЯ
+        // ================================================================
+        const drawnItems = L.featureGroup().addTo(map);
+        const drawControl = new L.Control.Draw({
+            position: 'topleft',
+            draw: {
+                polygon: {
+                    allowIntersection: false,
+                    showArea: true,
+                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                },
+                rectangle: {
+                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                },
+                circle: {
+                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                },
+                marker: true,
+                polyline: false,
+                circlemarker: false,
+            },
+            edit: { featureGroup: drawnItems, remove: true }
+        });
+        map.addControl(drawControl);
+
+        // ================================================================
+        //  6. ШТРИХОВКА (SVG pattern)
+        // ================================================================
+        function createHatchPattern(id, color = '#ffaa00', bg = 'transparent') {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '10');
+            svg.setAttribute('height', '10');
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+            pattern.setAttribute('id', id);
+            pattern.setAttribute('width', '10');
+            pattern.setAttribute('height', '10');
+            pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+            pattern.setAttribute('patternTransform', 'rotate(45)');
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('width', '10');
+            rect.setAttribute('height', '10');
+            rect.setAttribute('fill', bg);
+            pattern.appendChild(rect);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', '0');
+            line.setAttribute('y1', '0');
+            line.setAttribute('x2', '0');
+            line.setAttribute('y2', '10');
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', '3');
+            pattern.appendChild(line);
+            defs.appendChild(pattern);
+            svg.appendChild(defs);
+            return svg;
+        }
+
+        function ensureHatchPattern(color = '#ffaa00') {
+            const mapContainer = map.getContainer();
+            let svg = mapContainer.querySelector('svg');
+            if (!svg) {
+                const renderer = map.getRenderer ? map.getRenderer() : null;
+                if (renderer && renderer._container) {
+                    svg = renderer._container.querySelector('svg');
+                }
+            }
+            if (!svg) {
+                const container = mapContainer;
+                svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('style', 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;');
+                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                container.appendChild(svg);
+            }
+            let defs = svg.querySelector('defs');
+            if (!defs) {
+                defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                svg.appendChild(defs);
+            }
+            const patternId = `hatch-${color.replace('#', '')}`;
+            if (!defs.querySelector(`#${patternId}`)) {
+                const pattern = createHatchPattern(patternId, color);
+                const newPattern = pattern.querySelector('pattern').cloneNode(true);
+                defs.appendChild(newPattern);
+            }
+            return patternId;
+        }
+
+        function applyHatchToLayer(layer, color) {
+            const patternId = ensureHatchPattern(color);
+            layer.setStyle({
+                fill: true,
+                fillColor: `url(#${patternId})`,
+                fillOpacity: 1,
+                color: color,
+                weight: 2,
+                opacity: 0.9,
+                _hatch: true,
+                _hatchColor: color
+            });
+            layer.options._hatch = true;
+            layer.options._hatchColor = color;
+            layer.options.fillColor = `url(#${patternId})`;
+            layer.options.fillOpacity = 1;
+        }
+
+        // ================================================================
+        //  7. СИНХРОНИЗАЦИЯ ДАННЫХ ЧЕРЕЗ URL
+        // ================================================================
+        function encodeDataToURL() {
+            const fc = getAllFeatures();
+            const json = JSON.stringify(fc);
+            let encoded = btoa(encodeURIComponent(json));
+            const url = new URL(window.location);
+            url.searchParams.set('data', encoded);
+            const vis = {};
+            layerToggleBtns.forEach(btn => {
+                vis[btn.dataset.layer] = btn.classList.contains('active');
+            });
+            url.searchParams.set('layers', btoa(encodeURIComponent(JSON.stringify(vis))));
+            // Сохраняем имя синоптика
+            const syn = document.getElementById('synopticName').value || 'CSF';
+            url.searchParams.set('syn', btoa(encodeURIComponent(syn)));
+            return url.toString();
+        }
+
+        function decodeDataFromURL() {
+            const url = new URL(window.location);
+            const encoded = url.searchParams.get('data');
+            if (!encoded) return null;
+            try {
+                const json = decodeURIComponent(atob(encoded));
+                return JSON.parse(json);
+            } catch (e) {
+                console.warn('Ошибка декодирования данных из URL:', e);
+                return null;
+            }
+        }
+
+        function decodeLayersFromURL() {
+            const url = new URL(window.location);
+            const enc = url.searchParams.get('layers');
+            if (!enc) return null;
+            try {
+                const json = decodeURIComponent(atob(enc));
+                return JSON.parse(json);
+            } catch (e) { return null; }
+        }
+
+        function decodeSynopticFromURL() {
+            const url = new URL(window.location);
+            const enc = url.searchParams.get('syn');
+            if (!enc) return null;
+            try {
+                return decodeURIComponent(atob(enc));
+            } catch (e) { return null; }
+        }
+
+        function getAllFeatures() {
+            const fc = { type: 'FeatureCollection', features: [] };
+            Object.entries(riskLayers).forEach(([key, group]) => {
+                group.getLayers().forEach(l => {
+                    const g = l.toGeoJSON ? l.toGeoJSON() : null;
+                    if (g) {
+                        g.properties = g.properties || {};
+                        g.properties._layer = key;
+                        const opts = l.options || {};
+                        const isHatch = opts._hatch || false;
+                        const hatchColor = opts._hatchColor || opts.color || '#ffaa33';
+                        g.properties._style = {
+                            color: opts.color || '#ffaa33',
+                            weight: opts.weight || 2,
+                            opacity: opts.opacity || 0.9,
+                            fillOpacity: opts.fillOpacity || 0.25,
+                            dashArray: opts.dashArray || null,
+                            _origColor: opts._origColor || opts.color || '#ffaa33',
+                            fillColor: opts.fillColor || opts.color || '#ffaa33',
+                            _hatch: isHatch,
+                            _hatchColor: hatchColor
+                        };
+                        if (l.getPopup) {
+                            const popupContent = l.getPopup() ? l.getPopup().getContent() : null;
+                            if (popupContent) g.properties._popup = popupContent;
+                        }
+                        fc.features.push(g);
+                    }
+                });
+            });
+            drawnItems.getLayers().forEach(l => {
+                const g = l.toGeoJSON ? l.toGeoJSON() : null;
+                if (g) {
+                    g.properties = g.properties || {};
+                    g.properties._layer = 'drawn';
+                    const opts = l.options || {};
+                    g.properties._style = {
+                        color: opts.color || '#ffaa33',
+                        weight: opts.weight || 2,
+                        opacity: opts.opacity || 0.9,
+                        fillOpacity: opts.fillOpacity || 0.25,
+                        dashArray: opts.dashArray || null,
+                        _origColor: opts._origColor || opts.color || '#ffaa33',
+                        fillColor: opts.fillColor || opts.color || '#ffaa33',
+                        _hatch: opts._hatch || false,
+                        _hatchColor: opts._hatchColor || opts.color || '#ffaa33'
+                    };
+                    fc.features.push(g);
+                }
+            });
+            return fc;
+        }
+
+        function loadFeaturesFromData(data) {
+            if (!data || !data.features) return;
+            Object.values(riskLayers).forEach(g => g.clearLayers());
+            drawnItems.clearLayers();
+
+            data.features.forEach(f => {
+                if (!f.geometry) return;
+                const props = f.properties || {};
+                const style = props._style || {
+                    color: '#ffaa33',
+                    weight: 2,
+                    opacity: 0.9,
+                    fillOpacity: 0.25,
+                    _origColor: '#ffaa33',
+                    _hatch: false,
+                    _hatchColor: '#ffaa33'
+                };
+
+                const layer = L.geoJSON(f, {
+                    style: function() {
+                        return {
+                            color: style.color || '#ffaa33',
+                            weight: style.weight || 2,
+                            opacity: style.opacity || 0.9,
+                            fillOpacity: style.fillOpacity || 0.25,
+                            dashArray: style.dashArray || null,
+                            fillColor: style.fillColor || style.color || '#ffaa33'
+                        };
+                    }
+                });
+
+                const origColor = style._origColor || style.color || '#ffaa33';
+                layer.options._origColor = origColor;
+                layer.eachLayer(sub => {
+                    sub.options._origColor = origColor;
+                    if (style.dashArray) sub.options.dashArray = style.dashArray;
+                    else delete sub.options.dashArray;
+                });
+
+                if (style._hatch === true) {
+                    const hatchColor = style._hatchColor || origColor;
+                    const patternId = ensureHatchPattern(hatchColor);
+                    layer.setStyle({
+                        fill: true,
+                        fillColor: `url(#${patternId})`,
+                        fillOpacity: 1,
+                        color: hatchColor,
+                        weight: 2,
+                        opacity: 0.9
+                    });
+                    layer.options._hatch = true;
+                    layer.options._hatchColor = hatchColor;
+                    layer.eachLayer(sub => {
+                        sub.options._hatch = true;
+                        sub.options._hatchColor = hatchColor;
+                        sub.options.fillColor = `url(#${patternId})`;
+                        sub.options.fillOpacity = 1;
+                    });
+                }
+
+                if (props._popup) {
+                    layer.bindPopup(props._popup);
+                }
+
+                const key = props._layer || 'categorical';
+                if (riskLayers[key]) {
+                    riskLayers[key].addLayer(layer);
+                } else {
+                    drawnItems.addLayer(layer);
+                }
+            });
+
+            const layerState = decodeLayersFromURL();
+            if (layerState) {
+                layerToggleBtns.forEach(btn => {
+                    const key = btn.dataset.layer;
+                    if (layerState[key] === true) btn.classList.add('active');
+                    else if (layerState[key] === false) btn.classList.remove('active');
+                });
+                updateLayerVisibility();
+            } else {
+                layerToggleBtns.forEach(btn => btn.classList.add('active'));
+                updateLayerVisibility();
+            }
+
+            // Восстанавливаем имя синоптика
+            const syn = decodeSynopticFromURL();
+            if (syn) {
+                document.getElementById('synopticName').value = syn;
+            }
+        }
+
+        function updateURL() {
+            try {
+                const url = encodeDataToURL();
+                window.history.replaceState({}, '', url);
+            } catch (e) {
+                console.warn('Не удалось обновить URL:', e);
+            }
+        }
+
+        function loadFromURL() {
+            const data = decodeDataFromURL();
+            if (data) {
+                loadFeaturesFromData(data);
+                console.log('📥 Загружены данные из URL');
+            } else {
+                const layerState = decodeLayersFromURL();
+                if (layerState) {
+                    layerToggleBtns.forEach(btn => {
+                        const key = btn.dataset.layer;
+                        if (layerState[key] === true) btn.classList.add('active');
+                        else if (layerState[key] === false) btn.classList.remove('active');
+                    });
+                    updateLayerVisibility();
+                }
+                const syn = decodeSynopticFromURL();
+                if (syn) {
+                    document.getElementById('synopticName').value = syn;
+                }
+            }
+        }
+
+        // ================================================================
+        //  8. КНОПКИ ДЛЯ РАБОТЫ С URL
+        // ================================================================
+        document.getElementById('shareBtn').addEventListener('click', function() {
+            const url = encodeDataToURL();
+            navigator.clipboard.writeText(url).then(() => {
+                alert('✅ Ссылка скопирована! Отправьте её кому угодно, и они увидят ваш прогноз.');
+            }).catch(() => {
+                prompt('Скопируйте ссылку вручную:', url);
+            });
+        });
+
+        document.getElementById('loadUrlBtn').addEventListener('click', function() {
+            loadFromURL();
+            alert('🔄 Данные из URL загружены!');
+        });
+
+        // Обработка навигации назад/вперёд (popstate)
+        window.addEventListener('popstate', function() {
+            loadFromURL();
+        });
+
+        // ================================================================
+        //  9. ОБРАБОТЧИК СОЗДАНИЯ ФИГУР
+        // ================================================================
+        map.on(L.Draw.Event.CREATED, function(e) {
+            const layer = e.layer;
+            const color = drawColor.value;
+            if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.Circle) {
+                layer.setStyle({ color, weight: 2, opacity: 0.9, fillOpacity: 0.25, _origColor: color });
+
+                const popup = `
+                    <div style="font-size:11px; min-width:160px;">
+                        <b>Слой:</b>
+                        <select class="layer-select" style="display:block;width:100%;margin:3px 0;background:#1a2a3a;color:#e0e8f0;border:1px solid #3a4a6a;border-radius:3px;padding:2px 4px;font-size:11px;">
+                            <option value="categorical">Конвективный риск</option>
+                            <option value="tornado">Вероятность смерча</option>
+                            <option value="wind">Вероятность ветра</option>
+                            <option value="warnings">⚠️ Предупреждения</option>
+                        </select>
+                        <div class="prob-group" style="display:none; margin-top:3px;">
+                            <b>Вероятность:</b>
+                            <select class="prob-select" style="display:block;width:100%;margin:3px 0;background:#1a2a3a;color:#e0e8f0;border:1px solid #3a4a6a;border-radius:3px;padding:2px 4px;font-size:11px;">
+                                <option value="2%">2%</option>
+                                <option value="5%">5%</option>
+                                <option value="10%">10%</option>
+                                <option value="15%">15%</option>
+                                <option value="30%">30%</option>
+                                <option value="45%">45%</option>
+                                <option value="60%">60%</option>
+                                <option value="#ffaa00">ШТРИХ</option>
+                            </select>
+                            <label style="display:flex;align-items:center;gap:3px;margin-top:2px;font-size:10px;">
+                                <input type="checkbox" class="hatch-check" /> Штриховка (SIG)
+                            </label>
+                        </div>
+                        <div class="warning-group" style="display:none; margin-top:3px;">
+                            <b>Тип:</b>
+                            <select class="warning-select" style="display:block;width:100%;margin:3px 0;background:#1a2a3a;color:#e0e8f0;border:1px solid #3a4a6a;border-radius:3px;padding:2px 4px;font-size:11px;">
+                                <option value="Severe T-storm">Severe Thunderstorm</option>
+                                <option value="Tornado">Tornado</option>
+                                <option value="Tornado Emergency">Tornado Emergency</option>
+                                <option value="Flash Flood">Flash Flood</option>
+                                <option value="Marine">Marine</option>
+                            </select>
+                        </div>
+                        <button class="apply-layer-btn" style="background:#2a3a5a;border:none;color:#fff;padding:3px 10px;border-radius:3px;cursor:pointer;margin-top:4px;width:100%;font-size:11px;">✅ Применить</button>
+                    </div>
+                `;
+                layer.bindPopup(popup);
+                layer.on('popupopen', function() {
+                    const c = layer.getPopup().getElement();
+                    if (!c) return;
+                    const sel = c.querySelector('.layer-select');
+                    const probGrp = c.querySelector('.prob-group');
+                    const warnGrp = c.querySelector('.warning-group');
+                    const applyBtn = c.querySelector('.apply-layer-btn');
+                    const hatch = c.querySelector('.hatch-check');
+                    const probSel = c.querySelector('.prob-select');
+                    const warnSelP = c.querySelector('.warning-select');
+
+                    function updateVisibility() {
+                        const val = sel.value;
+                        probGrp.style.display = (val === 'tornado' || val === 'wind') ? 'block' : 'none';
+                        warnGrp.style.display = (val === 'warnings') ? 'block' : 'none';
+                        if (val === 'tornado' || val === 'wind') {
+                            if (probSel.value === '#ffaa00') {
+                                hatch.checked = true;
+                            }
+                        } else {
+                            hatch.checked = false;
+                        }
+                    }
+                    sel.addEventListener('change', updateVisibility);
+                    const initVal = sel.value;
+                    probGrp.style.display = (initVal === 'tornado' || initVal === 'wind') ? 'block' : 'none';
+                    warnGrp.style.display = (initVal === 'warnings') ? 'block' : 'none';
+                    if (initVal === 'tornado' || initVal === 'wind') {
+                        if (probSel.value === '#ffaa00') {
+                            hatch.checked = true;
+                        }
+                    } else {
+                        hatch.checked = false;
+                    }
+                    probSel.addEventListener('change', function() {
+                        if (sel.value === 'tornado' || sel.value === 'wind') {
+                            hatch.checked = (this.value === '#ffaa00');
+                        }
+                    });
+
+                    applyBtn.addEventListener('click', function() {
+                        const target = sel.value;
+                        const feature = layer.toGeoJSON();
+                        let style = { color: color, weight: 2, opacity: 0.9, fillOpacity: 0.25,
+                            _origColor: color };
+                        let label = '';
+                        const torColors = {
+                            '2%': '#4caf50',
+                            '5%': '#8d6e63',
+                            '10%': '#fdd835',
+                            '15%': '#e53935',
+                            '30%': '#ab47bc',
+                            '45%': '#7b1fa2',
+                            '60%': '#1a237e',
+                            '#ffaa00': '#ffaa00'
+                        };
+                        const windColors = {
+                            '5%': '#8d6e63',
+                            '15%': '#fdd835',
+                            '30%': '#e53935',
+                            '45%': '#ab47bc',
+                            '60%': '#7b1fa2',
+                            '#ffaa00': '#ffaa00'
+                        };
+                        const warnColors = {
+                            'Severe T-storm': '#ffcc00',
+                            'Tornado': '#ff3333',
+                            'Tornado Emergency': '#cc00cc',
+                            'Flash Flood': '#3399ff',
+                            'Marine': '#33cc99'
+                        };
+
+                        let finalColor = color;
+                        let dash = null;
+                        let w = 2;
+                        let useHatch = false;
+
+                        if (target === 'categorical') {
+                            const t = convSel.options[convSel.selectedIndex].text;
+                            finalColor = color;
+                            label = `Конвективный: ${t}`;
+                        } else if (target === 'tornado') {
+                            const p = probSel.value;
+                            useHatch = (p === '#ffaa00') || hatch.checked;
+                            finalColor = torColors[p] || '#4caf50';
+                            label = `Смерч ${p === '#ffaa00' ? 'ШТРИХ' : p}` + (useHatch ? ' (штриховка)' : '');
+                            if (useHatch) { dash = '4,4';
+                                w = 3; }
+                        } else if (target === 'wind') {
+                            const p = probSel.value;
+                            useHatch = (p === '#ffaa00') || hatch.checked;
+                            finalColor = windColors[p] || '#8d6e63';
+                            label = `Ветер ${p === '#ffaa00' ? 'ШТРИХ' : p}` + (useHatch ? ' (штриховка)' : '');
+                            if (useHatch) { dash = '4,4';
+                                w = 3; }
+                        } else if (target === 'warnings') {
+                            const wv = warnSelP.value;
+                            finalColor = warnColors[wv] || '#ffaa00';
+                            label = wv;
+                        }
+
+                        const newLayer = L.geoJSON(feature, {
+                            style: function() {
+                                return {
+                                    color: finalColor,
+                                    weight: w,
+                                    opacity: 0.9,
+                                    fillOpacity: 0.25,
+                                    dashArray: dash || null,
+                                    fillColor: finalColor,
+                                    _origColor: finalColor
+                                };
+                            }
+                        });
+                        newLayer.options._origColor = finalColor;
+                        newLayer.eachLayer(sub => {
+                            sub.options._origColor = finalColor;
+                            if (dash) sub.options.dashArray = dash;
+                            else delete sub.options.dashArray;
+                        });
+
+                        if (useHatch && (target === 'tornado' || target === 'wind')) {
+                            const hatchColor = finalColor;
+                            const patternId = ensureHatchPattern(hatchColor);
+                            newLayer.setStyle({
+                                fill: true,
+                                fillColor: `url(#${patternId})`,
+                                fillOpacity: 1,
+                                color: hatchColor,
+                                weight: 2,
+                                opacity: 0.9
+                            });
+                            newLayer.options._hatch = true;
+                            newLayer.options._hatchColor = hatchColor;
+                            newLayer.eachLayer(sub => {
+                                sub.options._hatch = true;
+                                sub.options._hatchColor = hatchColor;
+                                sub.options.fillColor = `url(#${patternId})`;
+                                sub.options.fillOpacity = 1;
+                            });
+                        }
+
+                        const syn = document.getElementById('synopticName').value || 'CSF';
+                        newLayer.bindPopup(`<b>${label}</b><br>Синоптик: ${syn}`);
+                        riskLayers[target].addLayer(newLayer);
+                        drawnItems.removeLayer(layer);
+                        map.closePopup();
+                        updateURL();
+                    });
+                });
+                drawnItems.addLayer(layer);
+                updateURL();
+            } else if (layer instanceof L.Marker) {
+                const m = L.marker(layer.getLatLng(), { icon: L.divIcon({ html: '📍', className: '', iconSize: [22, 22] }) });
+                const syn = document.getElementById('synopticName').value || 'CSF';
+                m.bindPopup(`Маркер<br>Синоптик: ${syn}`);
+                riskLayers.categorical.addLayer(m);
+                updateURL();
+            }
+        });
+
+        // ================================================================
+        //  10. СГЛАЖИВАНИЕ
+        // ================================================================
+        document.getElementById('smoothBtn').addEventListener('click', function() {
+            const layers = drawnItems.getLayers();
+            if (layers.length === 0) { alert('Нет полигонов для сглаживания.'); return; }
+            let count = 0;
+            layers.forEach(layer => {
+                if (layer instanceof L.Polygon) {
+                    const latlngs = layer.getLatLngs()[0];
+                    if (!latlngs || latlngs.length < 4) return;
+                    const coords = latlngs.map(p => [p.lng, p.lat]);
+                    if (coords[0][0] !== coords[coords.length - 1][0] ||
+                        coords[0][1] !== coords[coords.length - 1][1]) {
+                        coords.push([coords[0][0], coords[0][1]]);
+                    }
+                    try {
+                        const poly = turf.polygon([coords]);
+                        const smoothed = turf.bezierSpline(poly, { resolution: 10000, sharpness: 0.85 });
+                        const newCoords = smoothed.geometry.coordinates[0].map(c => [c[1], c[0]]);
+                        const origColor = layer.options._origColor || layer.options.color || '#ffaa33';
+                        const dash = layer.options.dashArray || null;
+                        const isHatch = layer.options._hatch || false;
+                        const hatchColor = layer.options._hatchColor || origColor;
+                        const newPoly = L.polygon(newCoords, {
+                            color: origColor,
+                            weight: layer.options.weight || 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25,
+                            dashArray: dash,
+                            _origColor: origColor,
+                            fillColor: origColor
+                        });
+                        if (isHatch) {
+                            const patternId = ensureHatchPattern(hatchColor);
+                            newPoly.setStyle({
+                                fill: true,
+                                fillColor: `url(#${patternId})`,
+                                fillOpacity: 1,
+                                color: hatchColor,
+                                weight: 2,
+                                opacity: 0.9
+                            });
+                            newPoly.options._hatch = true;
+                            newPoly.options._hatchColor = hatchColor;
+                        }
+                        if (layer.getPopup()) newPoly.bindPopup(layer.getPopup().getContent());
+                        drawnItems.removeLayer(layer);
+                        drawnItems.addLayer(newPoly);
+                        count++;
+                    } catch (e) { console.warn('Сглаживание не удалось:', e); }
+                }
+            });
+            if (count > 0) { updateURL();
+                alert(`✅ Сглажено ${count} полигонов.`); } else { alert('Нет подходящих полигонов.'); }
+        });
+
+        // ================================================================
+        //  11. УДАЛЕНИЕ И ОЧИСТКА
+        // ================================================================
+        document.getElementById('deleteSelectedBtn').addEventListener('click', function() {
+            const layers = drawnItems.getLayers();
+            if (layers.length === 0) { alert('Нет фигур для удаления.'); return; }
+            layers.forEach(l => drawnItems.removeLayer(l));
+            updateURL();
+        });
+
+        document.getElementById('clearAllBtn').addEventListener('click', function() {
+            if (!confirm('Удалить ВСЕ фигуры и слои?')) return;
+            drawnItems.clearLayers();
+            Object.values(riskLayers).forEach(g => g.clearLayers());
+            updateURL();
+        });
+
+        // ================================================================
+        //  12. ЭКСПОРТ / ИМПОРТ
+        // ================================================================
+        document.getElementById('exportGeoJSON').addEventListener('click', function() {
+            const fc = getAllFeatures();
+            const blob = new Blob([JSON.stringify(fc, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `CSF_forecast_${new Date().toISOString().slice(0,10)}.geojson`;
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('importGeoJSON').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(ev) {
+                try {
+                    const data = JSON.parse(ev.target.result);
+                    if (data.type !== 'FeatureCollection') { alert('Неверный формат'); return; }
+                    loadFeaturesFromData(data);
+                    updateURL();
+                    alert('✅ Импорт завершён, URL обновлён!');
+                } catch (err) { alert('Ошибка импорта: ' + err.message); }
+            };
+            reader.readAsText(file);
+            e.target.value = '';
+        });
+
+        // ================================================================
+        //  13. ЛЕГЕНДА
+        // ================================================================
+        document.getElementById('legendToggle').addEventListener('click', function() {
+            document.getElementById('legendPanel').classList.toggle('show');
+        });
+
+        // ================================================================
+        //  14. ИМЯ СИНОПТИКА
+        // ================================================================
+        const synInput = document.getElementById('synopticName');
+        if (localStorage.getItem('csf_synoptic')) synInput.value = localStorage.getItem('csf_synoptic');
+        synInput.addEventListener('change', function() {
+            localStorage.setItem('csf_synoptic', this.value);
+            updateURL();
+        });
+
+        // ================================================================
+        //  15. ЗАГРУЗКА ПРИ СТАРТЕ
+        // ================================================================
+        loadFromURL();
+
+        console.log('✅ CSF | SPC Russia — карта загружена');
+        console.log('🔗 Данные синхронизируются через URL – поделитесь ссылкой с другими устройствами');
+        console.log('📚 Слои переключаются кнопками в топбаре: Конв., Смерч, Ветер, Предупр.');
+        console.log('🎨 Цвет и штриховка полигонов сохраняются в URL');
+        console.log('🌪️ Для слоёв "Смерч" и "Ветер" при выборе "ШТРИХ" автоматически включается штриховка заливки (SIG)');
+        console.log('📋 Нажмите "Скопировать ссылку", чтобы поделиться прогнозом');
+    </script>
+
+</body>
+</html>
