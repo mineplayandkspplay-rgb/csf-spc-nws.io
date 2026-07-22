@@ -46,6 +46,7 @@
             flex-shrink: 0;
             z-index: 10;
             font-size: 0.75rem;
+            min-height: 40px;
         }
         .topbar .brand {
             font-weight: 700;
@@ -111,6 +112,24 @@
         }
         .topbar .btn.share-btn:hover {
             background: #3a7a4a;
+        }
+        .topbar .btn.save-btn {
+            background: #2a4a7a;
+            border-color: #4a7aaa;
+        }
+        .topbar .btn.save-btn:hover {
+            background: #3a5a8a;
+        }
+        .topbar .btn.auth-btn {
+            background: #5a3a2a;
+            border-color: #8a5a4a;
+        }
+        .topbar .btn.auth-btn:hover {
+            background: #7a4a3a;
+        }
+        .topbar .btn.auth-btn.active {
+            background: #2a5a3a;
+            border-color: #4a8a5a;
         }
         .topbar .sep {
             width: 1px;
@@ -189,6 +208,32 @@
         .layer-toggle-btn.active .badge {
             background: #3a5a7a;
             color: #c0d0ee;
+        }
+
+        /* Дни */
+        .day-toggles {
+            display: flex;
+            gap: 3px;
+        }
+        .day-btn {
+            background: #1e2a3e;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            padding: 1px 8px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #8899bb;
+            cursor: pointer;
+            transition: 0.15s;
+            height: 22px;
+        }
+        .day-btn.active {
+            border-color: #ffb347;
+            background: #2a3a4a;
+            color: #ffb347;
+        }
+        .day-btn:hover {
+            background: #2a3a5a;
         }
 
         #map {
@@ -270,61 +315,108 @@
             border-color: #ffaa00;
         }
 
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2a3e;
+            border: 1px solid #4a7aaa;
+            border-radius: 8px;
+            padding: 8px 18px;
+            color: #e0e8f0;
+            font-size: 0.8rem;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* Модальное окно входа */
+        .auth-modal {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .auth-modal.show {
+            display: flex;
+        }
+        .auth-modal .modal-box {
+            background: #141c2b;
+            border: 2px solid #3a4a6a;
+            border-radius: 12px;
+            padding: 24px;
+            min-width: 300px;
+            max-width: 90%;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+        }
+        .auth-modal .modal-box h2 {
+            color: #ffb347;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+        .auth-modal .modal-box label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aabbdd;
+            margin-top: 10px;
+        }
+        .auth-modal .modal-box input {
+            width: 100%;
+            background: #0b121f;
+            border: 1px solid #3a4a6a;
+            color: #e0e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .auth-modal .modal-box .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+        .auth-modal .modal-box .btn-row .btn {
+            padding: 6px 16px;
+            font-size: 0.8rem;
+        }
+        .auth-modal .modal-box .error {
+            color: #ff6b4a;
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+
         @media (max-width: 820px) {
-            .topbar .brand {
-                font-size: 0.8rem;
-            }
-            .topbar .sep {
-                display: none;
-            }
-            .topbar label {
-                font-size: 0.6rem;
-            }
-            .topbar .btn {
-                font-size: 0.55rem;
-                padding: 2px 6px;
-            }
-            .risk-select {
-                font-size: 0.6rem;
-                min-width: 50px;
-            }
-            .risk-label {
-                font-size: 0.5rem;
-            }
-            .layer-toggle-btn .label-text {
-                display: none;
-            }
-            .layer-toggle-btn .badge {
-                display: none;
-            }
-            .layer-toggle-btn {
-                padding: 1px 4px;
-            }
+            .topbar .brand { font-size: 0.8rem; }
+            .topbar .sep { display: none; }
+            .topbar label { font-size: 0.6rem; }
+            .topbar .btn { font-size: 0.55rem; padding: 2px 6px; }
+            .risk-select { font-size: 0.6rem; min-width: 50px; }
+            .risk-label { font-size: 0.5rem; }
+            .layer-toggle-btn .label-text { display: none; }
+            .layer-toggle-btn .badge { display: none; }
+            .layer-toggle-btn { padding: 1px 4px; }
+            .day-btn { font-size: 0.5rem; padding: 1px 5px; }
         }
         @media (max-width: 600px) {
-            .topbar {
-                gap: 2px 4px;
-                padding: 3px 6px;
-            }
-            .topbar .brand {
-                font-size: 0.7rem;
-                margin-right: 2px;
-            }
-            .topbar .brand small {
-                font-size: 0.5rem;
-            }
-            .topbar .btn {
-                font-size: 0.5rem;
-                padding: 1px 5px;
-            }
-            .layer-toggle-btn .dot {
-                width: 8px;
-                height: 8px;
-            }
-            .layer-toggle-btn {
-                height: 18px;
-                font-size: 0.5rem;
-            }
+            .topbar { gap: 2px 4px; padding: 3px 6px; }
+            .topbar .brand { font-size: 0.7rem; margin-right: 2px; }
+            .topbar .brand small { font-size: 0.5rem; }
+            .topbar .btn { font-size: 0.5rem; padding: 1px 5px; }
+            .layer-toggle-btn .dot { width: 8px; height: 8px; }
+            .layer-toggle-btn { height: 18px; font-size: 0.5rem; }
+            .day-btn { height: 18px; font-size: 0.5rem; }
         }
     </style>
 </head>
@@ -334,7 +426,16 @@
     <div class="topbar">
         <div class="brand">CSF <small>| SPC Russia</small></div>
 
-        <!-- ===== КНОПКИ ПЕРЕКЛЮЧЕНИЯ СЛОЁВ ===== -->
+        <!-- Дни -->
+        <div class="day-toggles" id="dayToggles">
+            <button class="day-btn active" data-day="1">Day 1</button>
+            <button class="day-btn" data-day="2">Day 2</button>
+            <button class="day-btn" data-day="3">Day 3</button>
+        </div>
+
+        <span class="sep"></span>
+
+        <!-- Кнопки слоёв -->
         <div class="layer-toggles" id="layerToggles">
             <button class="layer-toggle-btn active" data-layer="categorical" title="Конвективный риск">
                 <span class="dot" style="background:#e8943a;"></span>
@@ -437,8 +538,9 @@
             <input class="synoptic-input" id="synopticName" placeholder="Ваше имя" value="CSF" style="background:#0b121f;border:1px solid #3a4a6a;color:#e0e8f0;padding:2px 6px;border-radius:4px;font-size:0.7rem;min-width:90px;" />
         </label>
 
+        <button class="btn auth-btn" id="authBtn">🔒 Войти</button>
+        <button class="btn save-btn" id="saveBtn">💾 Сохранить</button>
         <button class="btn share-btn" id="shareBtn">📋 Скопировать ссылку</button>
-        <button class="btn" id="loadUrlBtn">🔄 Обновить из URL</button>
 
         <button class="btn" id="exportGeoJSON">📤 Export</button>
         <button class="btn" id="importGeoJSON">📥 Import</button>
@@ -447,6 +549,23 @@
 
     <!-- ===== КАРТА ===== -->
     <div id="map"></div>
+
+    <!-- ===== ТОСТ ===== -->
+    <div class="toast" id="toast"></div>
+
+    <!-- ===== МОДАЛЬНОЕ ОКНО ВХОДА ===== -->
+    <div class="auth-modal" id="authModal">
+        <div class="modal-box">
+            <h2>🔐 Вход для редактирования</h2>
+            <label>Введите пароль</label>
+            <input type="password" id="authPassword" placeholder="Пароль" />
+            <div class="error" id="authError"></div>
+            <div class="btn-row">
+                <button class="btn" id="authCancel">Отмена</button>
+                <button class="btn save-btn" id="authSubmit">Войти</button>
+            </div>
+        </div>
+    </div>
 
     <!-- ===== ЛЕГЕНДА ===== -->
     <div class="legend-toggle" id="legendToggle">📖 Легенда</div>
@@ -522,39 +641,21 @@
         });
 
         // ================================================================
-        //  2. СВЯЗКА СЕЛЕКТОРОВ → ЦВЕТ
+        //  2. СОСТОЯНИЕ
         // ================================================================
-        const convSel = document.getElementById('convectiveSelect');
-        const torSel = document.getElementById('tornadoSelect');
-        const windSel = document.getElementById('windSelect');
-        const warnSel = document.getElementById('warningSelect');
-        const drawColor = document.getElementById('drawColor');
+        const PASSWORD = 'csf2026'; // пароль для редактирования
+        let isAuthorized = false;
+        let currentDay = 1; // 1,2,3
 
-        function updateColor() {
-            const active = document.activeElement;
-            let color = convSel.value;
-            if (active === torSel) color = torSel.value;
-            else if (active === windSel) color = windSel.value;
-            else if (active === warnSel) color = warnSel.value;
-            else color = convSel.value;
-            drawColor.value = color;
-            if (drawControl && drawControl._toolbars && drawControl._toolbars.draw) {
-                const modes = drawControl._toolbars.draw._modes;
-                if (modes.polygon) modes.polygon.handler.options.shapeOptions.color = color;
-                if (modes.rectangle) modes.rectangle.handler.options.shapeOptions.color = color;
-                if (modes.circle) modes.circle.handler.options.shapeOptions.color = color;
-            }
-        }
+        // Данные для трёх дней
+        let store = {
+            day1: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
+            day2: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
+            day3: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
+            lastDayShift: Date.now() // временная метка последнего сдвига
+        };
 
-        convSel.addEventListener('change', updateColor);
-        torSel.addEventListener('change', updateColor);
-        windSel.addEventListener('change', updateColor);
-        warnSel.addEventListener('change', updateColor);
-        drawColor.value = convSel.value;
-
-        // ================================================================
-        //  3. СЛОИ РИСКОВ (feature groups)
-        // ================================================================
+        // Текущие слои на карте (для отображения)
         const riskLayers = {
             categorical: L.featureGroup().addTo(map),
             tornado: L.featureGroup().addTo(map),
@@ -562,61 +663,140 @@
             warnings: L.featureGroup().addTo(map),
         };
 
-        // ================================================================
-        //  4. УПРАВЛЕНИЕ ВИДИМОСТЬЮ СЛОЁВ (кнопки в топбаре)
-        // ================================================================
-        const layerToggleBtns = document.querySelectorAll('.layer-toggle-btn');
+        // Вспомогательная группа для временных фигур (drawnItems)
+        const drawnItems = L.featureGroup().addTo(map);
 
-        function updateLayerVisibility() {
-            layerToggleBtns.forEach(btn => {
-                const key = btn.dataset.layer;
-                const group = riskLayers[key];
-                const active = btn.classList.contains('active');
-                if (active) {
-                    if (!map.hasLayer(group)) map.addLayer(group);
-                } else {
-                    if (map.hasLayer(group)) map.removeLayer(group);
-                }
-            });
-            updateURL();
+        // ================================================================
+        //  3. УПРАВЛЕНИЕ ДНЯМИ
+        // ================================================================
+        function shiftDaysIfNeeded() {
+            const now = Date.now();
+            const last = store.lastDayShift || now;
+            const diff = now - last;
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (diff > oneDay) {
+                // Сдвигаем: day1 = day2, day2 = day3, day3 пустой
+                store.day1 = JSON.parse(JSON.stringify(store.day2));
+                store.day2 = JSON.parse(JSON.stringify(store.day3));
+                store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: store
+                        .day1.synoptic || 'CSF' };
+                store.lastDayShift = now;
+                // Сохраняем в localStorage
+                saveToLocalStorage();
+                showToast('🔄 Дни сдвинуты: наступил новый день');
+            }
         }
 
-        layerToggleBtns.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                this.classList.toggle('active');
-                updateLayerVisibility();
+        // Получить данные текущего дня
+        function getCurrentDayData() {
+            const key = 'day' + currentDay;
+            return store[key];
+        }
+
+        // Загрузить данные дня на карту
+        function loadDay(dayNumber) {
+            currentDay = dayNumber;
+            const dayData = getCurrentDayData();
+            // Очистить все слои
+            Object.values(riskLayers).forEach(g => g.clearLayers());
+            drawnItems.clearLayers();
+
+            // Загрузить фичи
+            if (dayData.features) {
+                dayData.features.forEach(f => {
+                    if (!f.geometry) return;
+                    const props = f.properties || {};
+                    const style = props._style || {
+                        color: '#ffaa33',
+                        weight: 2,
+                        opacity: 0.9,
+                        fillOpacity: 0.25,
+                        _origColor: '#ffaa33',
+                        _hatch: false,
+                        _hatchColor: '#ffaa33'
+                    };
+                    const layer = L.geoJSON(f, {
+                        style: function() {
+                            return {
+                                color: style.color || '#ffaa33',
+                                weight: style.weight || 2,
+                                opacity: style.opacity || 0.9,
+                                fillOpacity: style.fillOpacity || 0.25,
+                                dashArray: style.dashArray || null,
+                                fillColor: style.fillColor || style.color || '#ffaa33'
+                            };
+                        }
+                    });
+                    const origColor = style._origColor || style.color || '#ffaa33';
+                    layer.options._origColor = origColor;
+                    layer.eachLayer(sub => {
+                        sub.options._origColor = origColor;
+                        if (style.dashArray) sub.options.dashArray = style.dashArray;
+                        else delete sub.options.dashArray;
+                    });
+                    if (style._hatch === true) {
+                        const hatchColor = style._hatchColor || origColor;
+                        const patternId = ensureHatchPattern(hatchColor);
+                        layer.setStyle({
+                            fill: true,
+                            fillColor: `url(#${patternId})`,
+                            fillOpacity: 1,
+                            color: hatchColor,
+                            weight: 2,
+                            opacity: 0.9
+                        });
+                        layer.options._hatch = true;
+                        layer.options._hatchColor = hatchColor;
+                        layer.eachLayer(sub => {
+                            sub.options._hatch = true;
+                            sub.options._hatchColor = hatchColor;
+                            sub.options.fillColor = `url(#${patternId})`;
+                            sub.options.fillOpacity = 1;
+                        });
+                    }
+                    if (props._popup) {
+                        layer.bindPopup(props._popup);
+                    }
+                    const key = props._layer || 'categorical';
+                    if (riskLayers[key]) {
+                        riskLayers[key].addLayer(layer);
+                    } else {
+                        drawnItems.addLayer(layer);
+                    }
+                });
+            }
+
+            // Восстановить состояние слоёв
+            const layersState = dayData.layers || { categorical: true, tornado: true, wind: true, warnings: true };
+            layerToggleBtns.forEach(btn => {
+                const key = btn.dataset.layer;
+                if (layersState[key] === true) btn.classList.add('active');
+                else btn.classList.remove('active');
             });
-        });
+            updateLayerVisibility();
+
+            // Имя синоптика
+            if (dayData.synoptic) {
+                document.getElementById('synopticName').value = dayData.synoptic;
+            }
+
+            // Обновить активную кнопку дня
+            document.querySelectorAll('.day-btn').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.day) === dayNumber);
+            });
+
+            // Обновить заголовок
+            updateDayTitle();
+        }
+
+        function updateDayTitle() {
+            const days = ['', 'Сегодня', 'Завтра', 'Послезавтра'];
+            const dayName = days[currentDay] || `Day ${currentDay}`;
+            document.querySelector('.brand small').textContent = `| ${dayName}`;
+        }
 
         // ================================================================
-        //  5. ИНСТРУМЕНТЫ РИСОВАНИЯ
-        // ================================================================
-        const drawnItems = L.featureGroup().addTo(map);
-        const drawControl = new L.Control.Draw({
-            position: 'topleft',
-            draw: {
-                polygon: {
-                    allowIntersection: false,
-                    showArea: true,
-                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
-                },
-                rectangle: {
-                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
-                },
-                circle: {
-                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
-                },
-                marker: true,
-                polyline: false,
-                circlemarker: false,
-            },
-            edit: { featureGroup: drawnItems, remove: true }
-        });
-        map.addControl(drawControl);
-
-        // ================================================================
-        //  6. ШТРИХОВКА (SVG pattern)
+        //  4. ШТРИХОВКА (SVG pattern)
         // ================================================================
         function createHatchPattern(id, color = '#ffaa00', bg = 'transparent') {
             const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -677,78 +857,77 @@
             return patternId;
         }
 
-        function applyHatchToLayer(layer, color) {
-            const patternId = ensureHatchPattern(color);
-            layer.setStyle({
-                fill: true,
-                fillColor: `url(#${patternId})`,
-                fillOpacity: 1,
-                color: color,
-                weight: 2,
-                opacity: 0.9,
-                _hatch: true,
-                _hatchColor: color
-            });
-            layer.options._hatch = true;
-            layer.options._hatchColor = color;
-            layer.options.fillColor = `url(#${patternId})`;
-            layer.options.fillOpacity = 1;
-        }
+        // ================================================================
+        //  5. УПРАВЛЕНИЕ ВИДИМОСТЬЮ СЛОЁВ
+        // ================================================================
+        const layerToggleBtns = document.querySelectorAll('.layer-toggle-btn');
 
-        // ================================================================
-        //  7. СИНХРОНИЗАЦИЯ ДАННЫХ ЧЕРЕЗ URL
-        // ================================================================
-        function encodeDataToURL() {
-            const fc = getAllFeatures();
-            const json = JSON.stringify(fc);
-            let encoded = btoa(encodeURIComponent(json));
-            const url = new URL(window.location);
-            url.searchParams.set('data', encoded);
-            const vis = {};
+        function updateLayerVisibility() {
             layerToggleBtns.forEach(btn => {
-                vis[btn.dataset.layer] = btn.classList.contains('active');
+                const key = btn.dataset.layer;
+                const group = riskLayers[key];
+                const active = btn.classList.contains('active');
+                if (active) {
+                    if (!map.hasLayer(group)) map.addLayer(group);
+                } else {
+                    if (map.hasLayer(group)) map.removeLayer(group);
+                }
             });
-            url.searchParams.set('layers', btoa(encodeURIComponent(JSON.stringify(vis))));
-            // Сохраняем имя синоптика
-            const syn = document.getElementById('synopticName').value || 'CSF';
-            url.searchParams.set('syn', btoa(encodeURIComponent(syn)));
-            return url.toString();
+            // Сохраняем состояние в текущий день
+            const dayData = getCurrentDayData();
+            const layersState = {};
+            layerToggleBtns.forEach(btn => {
+                layersState[btn.dataset.layer] = btn.classList.contains('active');
+            });
+            dayData.layers = layersState;
+            saveToLocalStorage();
         }
 
-        function decodeDataFromURL() {
-            const url = new URL(window.location);
-            const encoded = url.searchParams.get('data');
-            if (!encoded) return null;
-            try {
-                const json = decodeURIComponent(atob(encoded));
-                return JSON.parse(json);
-            } catch (e) {
-                console.warn('Ошибка декодирования данных из URL:', e);
-                return null;
-            }
+        layerToggleBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!isAuthorized) {
+                    showToast('⚠️ Войдите для изменения слоёв');
+                    return;
+                }
+                e.stopPropagation();
+                this.classList.toggle('active');
+                updateLayerVisibility();
+            });
+        });
+
+        // ================================================================
+        //  6. УПРАВЛЕНИЕ ДНЯМИ (кнопки)
+        // ================================================================
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const day = parseInt(this.dataset.day);
+                if (day !== currentDay) {
+                    // Сохраняем текущий день перед переключением
+                    saveCurrentDayData();
+                    loadDay(day);
+                }
+            });
+        });
+
+        // Сохранить текущие данные дня в store
+        function saveCurrentDayData() {
+            const dayData = getCurrentDayData();
+            // Собираем все фичи с карты
+            const features = getAllFeatures();
+            dayData.features = features;
+            dayData.layers = {};
+            layerToggleBtns.forEach(btn => {
+                dayData.layers[btn.dataset.layer] = btn.classList.contains('active');
+            });
+            dayData.synoptic = document.getElementById('synopticName').value || 'CSF';
+            saveToLocalStorage();
         }
 
-        function decodeLayersFromURL() {
-            const url = new URL(window.location);
-            const enc = url.searchParams.get('layers');
-            if (!enc) return null;
-            try {
-                const json = decodeURIComponent(atob(enc));
-                return JSON.parse(json);
-            } catch (e) { return null; }
-        }
-
-        function decodeSynopticFromURL() {
-            const url = new URL(window.location);
-            const enc = url.searchParams.get('syn');
-            if (!enc) return null;
-            try {
-                return decodeURIComponent(atob(enc));
-            } catch (e) { return null; }
-        }
-
+        // ================================================================
+        //  7. РАБОТА С ДАННЫМИ (экспорт/импорт, localStorage, URL)
+        // ================================================================
         function getAllFeatures() {
-            const fc = { type: 'FeatureCollection', features: [] };
+            const fc = [];
             Object.entries(riskLayers).forEach(([key, group]) => {
                 group.getLayers().forEach(l => {
                     const g = l.toGeoJSON ? l.toGeoJSON() : null;
@@ -773,7 +952,7 @@
                             const popupContent = l.getPopup() ? l.getPopup().getContent() : null;
                             if (popupContent) g.properties._popup = popupContent;
                         }
-                        fc.features.push(g);
+                        fc.push(g);
                     }
                 });
             });
@@ -794,18 +973,18 @@
                         _hatch: opts._hatch || false,
                         _hatchColor: opts._hatchColor || opts.color || '#ffaa33'
                     };
-                    fc.features.push(g);
+                    fc.push(g);
                 }
             });
             return fc;
         }
 
-        function loadFeaturesFromData(data) {
-            if (!data || !data.features) return;
+        function loadFeaturesFromData(features, layersState, synoptic) {
+            // Очищаем слои
             Object.values(riskLayers).forEach(g => g.clearLayers());
             drawnItems.clearLayers();
 
-            data.features.forEach(f => {
+            features.forEach(f => {
                 if (!f.geometry) return;
                 const props = f.properties || {};
                 const style = props._style || {
@@ -817,7 +996,6 @@
                     _hatch: false,
                     _hatchColor: '#ffaa33'
                 };
-
                 const layer = L.geoJSON(f, {
                     style: function() {
                         return {
@@ -830,7 +1008,6 @@
                         };
                     }
                 });
-
                 const origColor = style._origColor || style.color || '#ffaa33';
                 layer.options._origColor = origColor;
                 layer.eachLayer(sub => {
@@ -838,7 +1015,6 @@
                     if (style.dashArray) sub.options.dashArray = style.dashArray;
                     else delete sub.options.dashArray;
                 });
-
                 if (style._hatch === true) {
                     const hatchColor = style._hatchColor || origColor;
                     const patternId = ensureHatchPattern(hatchColor);
@@ -859,11 +1035,9 @@
                         sub.options.fillOpacity = 1;
                     });
                 }
-
                 if (props._popup) {
                     layer.bindPopup(props._popup);
                 }
-
                 const key = props._layer || 'categorical';
                 if (riskLayers[key]) {
                     riskLayers[key].addLayer(layer);
@@ -872,83 +1046,289 @@
                 }
             });
 
-            const layerState = decodeLayersFromURL();
-            if (layerState) {
+            // Восстанавливаем состояние слоёв
+            if (layersState) {
                 layerToggleBtns.forEach(btn => {
                     const key = btn.dataset.layer;
-                    if (layerState[key] === true) btn.classList.add('active');
-                    else if (layerState[key] === false) btn.classList.remove('active');
+                    if (layersState[key] === true) btn.classList.add('active');
+                    else btn.classList.remove('active');
                 });
                 updateLayerVisibility();
             } else {
                 layerToggleBtns.forEach(btn => btn.classList.add('active'));
                 updateLayerVisibility();
             }
-
-            // Восстанавливаем имя синоптика
-            const syn = decodeSynopticFromURL();
-            if (syn) {
-                document.getElementById('synopticName').value = syn;
+            if (synoptic) {
+                document.getElementById('synopticName').value = synoptic;
             }
         }
 
-        function updateURL() {
+        // Сохранить в localStorage
+        function saveToLocalStorage() {
             try {
-                const url = encodeDataToURL();
-                window.history.replaceState({}, '', url);
+                const data = {
+                    day1: store.day1,
+                    day2: store.day2,
+                    day3: store.day3,
+                    lastDayShift: store.lastDayShift
+                };
+                localStorage.setItem('csf_forecast', JSON.stringify(data));
             } catch (e) {
-                console.warn('Не удалось обновить URL:', e);
+                console.warn('Не удалось сохранить в localStorage:', e);
             }
         }
 
-        function loadFromURL() {
-            const data = decodeDataFromURL();
-            if (data) {
-                loadFeaturesFromData(data);
-                console.log('📥 Загружены данные из URL');
+        // Загрузить из localStorage
+        function loadFromLocalStorage() {
+            try {
+                const raw = localStorage.getItem('csf_forecast');
+                if (!raw) return false;
+                const data = JSON.parse(raw);
+                if (data.day1 && data.day2 && data.day3) {
+                    store.day1 = data.day1;
+                    store.day2 = data.day2;
+                    store.day3 = data.day3;
+                    store.lastDayShift = data.lastDayShift || Date.now();
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.warn('Ошибка загрузки из localStorage:', e);
+                return false;
+            }
+        }
+
+        // Кодировать все данные в URL
+        function encodeAllDataToURL() {
+            const data = {
+                day1: store.day1,
+                day2: store.day2,
+                day3: store.day3,
+                lastDayShift: store.lastDayShift
+            };
+            const json = JSON.stringify(data);
+            return btoa(encodeURIComponent(json));
+        }
+
+        function decodeDataFromURL() {
+            const url = new URL(window.location);
+            const encoded = url.searchParams.get('data');
+            if (!encoded) return null;
+            try {
+                const json = decodeURIComponent(atob(encoded));
+                return JSON.parse(json);
+            } catch (e) {
+                console.warn('Ошибка декодирования данных из URL:', e);
+                return null;
+            }
+        }
+
+        // ================================================================
+        //  8. ИНИЦИАЛИЗАЦИЯ (загрузка при старте)
+        // ================================================================
+        function init() {
+            // Проверить сдвиг дней
+            shiftDaysIfNeeded();
+
+            // Попробовать загрузить из URL
+            const urlData = decodeDataFromURL();
+            if (urlData) {
+                store.day1 = urlData.day1 || store.day1;
+                store.day2 = urlData.day2 || store.day2;
+                store.day3 = urlData.day3 || store.day3;
+                store.lastDayShift = urlData.lastDayShift || Date.now();
+                // Сохранить в localStorage
+                saveToLocalStorage();
+                showToast('📥 Загружено из URL');
             } else {
-                const layerState = decodeLayersFromURL();
-                if (layerState) {
-                    layerToggleBtns.forEach(btn => {
-                        const key = btn.dataset.layer;
-                        if (layerState[key] === true) btn.classList.add('active');
-                        else if (layerState[key] === false) btn.classList.remove('active');
-                    });
-                    updateLayerVisibility();
+                // Загрузить из localStorage
+                const loaded = loadFromLocalStorage();
+                if (!loaded) {
+                    // Пустые данные, создаём дефолтные
+                    store.day1 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                        synoptic: 'CSF' };
+                    store.day2 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                        synoptic: 'CSF' };
+                    store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                        synoptic: 'CSF' };
+                    store.lastDayShift = Date.now();
+                    saveToLocalStorage();
                 }
-                const syn = decodeSynopticFromURL();
-                if (syn) {
-                    document.getElementById('synopticName').value = syn;
+            }
+
+            // Загрузить день 1
+            loadDay(1);
+
+            // Проверить авторизацию (из localStorage)
+            const auth = localStorage.getItem('csf_auth');
+            if (auth === 'true') {
+                isAuthorized = true;
+                document.getElementById('authBtn').textContent = '🔓 Выйти';
+                document.getElementById('authBtn').classList.add('active');
+                enableEditing(true);
+            } else {
+                enableEditing(false);
+            }
+
+            // Обновить заголовок
+            updateDayTitle();
+        }
+
+        // ================================================================
+        //  9. СИСТЕМА ВХОДА
+        // ================================================================
+        function enableEditing(enabled) {
+            const tools = [
+                document.getElementById('drawTool'),
+                document.getElementById('drawColor'),
+                document.getElementById('smoothBtn'),
+                document.getElementById('deleteSelectedBtn'),
+                document.getElementById('clearAllBtn'),
+                document.getElementById('saveBtn'),
+                document.getElementById('shareBtn'),
+                document.getElementById('exportGeoJSON'),
+                document.getElementById('importGeoJSON')
+            ];
+            const drawControlContainer = document.querySelector('.leaflet-draw');
+            if (drawControlContainer) {
+                drawControlContainer.style.display = enabled ? 'block' : 'none';
+            }
+            tools.forEach(el => {
+                if (el) {
+                    el.disabled = !enabled;
+                    el.style.opacity = enabled ? '1' : '0.4';
+                    el.style.pointerEvents = enabled ? 'auto' : 'none';
+                }
+            });
+            // Также блокируем кнопки слоёв (они уже проверяют isAuthorized)
+            // Но для единообразия скрываем возможность редактирования
+            if (!enabled) {
+                // Запрещаем рисование
+                if (drawControl) {
+                    // Нельзя удалить контрол, просто блокируем
                 }
             }
         }
 
+        document.getElementById('authBtn').addEventListener('click', function() {
+            if (isAuthorized) {
+                // Выход
+                isAuthorized = false;
+                localStorage.removeItem('csf_auth');
+                this.textContent = '🔒 Войти';
+                this.classList.remove('active');
+                enableEditing(false);
+                showToast('🔒 Вы вышли из режима редактирования');
+            } else {
+                // Показать модалку
+                document.getElementById('authModal').classList.add('show');
+                document.getElementById('authPassword').value = '';
+                document.getElementById('authError').textContent = '';
+                document.getElementById('authPassword').focus();
+            }
+        });
+
+        document.getElementById('authCancel').addEventListener('click', function() {
+            document.getElementById('authModal').classList.remove('show');
+        });
+
+        document.getElementById('authSubmit').addEventListener('click', function() {
+            const pass = document.getElementById('authPassword').value;
+            if (pass === PASSWORD) {
+                isAuthorized = true;
+                localStorage.setItem('csf_auth', 'true');
+                document.getElementById('authBtn').textContent = '🔓 Выйти';
+                document.getElementById('authBtn').classList.add('active');
+                enableEditing(true);
+                document.getElementById('authModal').classList.remove('show');
+                showToast('🔓 Вход выполнен, вы можете редактировать прогноз');
+            } else {
+                document.getElementById('authError').textContent = 'Неверный пароль';
+            }
+        });
+
+        // Закрытие модалки по Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                document.getElementById('authModal').classList.remove('show');
+            }
+        });
+
         // ================================================================
-        //  8. КНОПКИ ДЛЯ РАБОТЫ С URL
+        //  10. УПРАВЛЕНИЕ URL (без автоматического обновления)
         // ================================================================
+        // Кнопка "Сохранить" – обновляет URL и localStorage
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для сохранения'); return; }
+            saveCurrentDayData();
+            // Обновляем URL с данными
+            const encoded = encodeAllDataToURL();
+            const url = new URL(window.location);
+            url.searchParams.set('data', encoded);
+            window.history.replaceState({}, '', url);
+            showToast('💾 Прогноз сохранён в URL и локальное хранилище');
+        });
+
+        // Кнопка "Скопировать ссылку" – генерирует ссылку с данными
         document.getElementById('shareBtn').addEventListener('click', function() {
-            const url = encodeDataToURL();
-            navigator.clipboard.writeText(url).then(() => {
-                alert('✅ Ссылка скопирована! Отправьте её кому угодно, и они увидят ваш прогноз.');
+            saveCurrentDayData();
+            const encoded = encodeAllDataToURL();
+            const url = new URL(window.location);
+            url.searchParams.set('data', encoded);
+            const shareUrl = url.toString();
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast('📋 Ссылка скопирована! Отправьте её на другие устройства.');
             }).catch(() => {
-                prompt('Скопируйте ссылку вручную:', url);
+                prompt('Скопируйте ссылку вручную:', shareUrl);
             });
         });
 
-        document.getElementById('loadUrlBtn').addEventListener('click', function() {
-            loadFromURL();
-            alert('🔄 Данные из URL загружены!');
-        });
-
-        // Обработка навигации назад/вперёд (popstate)
-        window.addEventListener('popstate', function() {
-            loadFromURL();
-        });
-
         // ================================================================
-        //  9. ОБРАБОТЧИК СОЗДАНИЯ ФИГУР
+        //  11. ИНСТРУМЕНТЫ РИСОВАНИЯ (с проверкой авторизации)
         // ================================================================
+        const drawControl = new L.Control.Draw({
+            position: 'topleft',
+            draw: {
+                polygon: {
+                    allowIntersection: false,
+                    showArea: true,
+                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                },
+                rectangle: {
+                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                },
+                circle: {
+                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                },
+                marker: true,
+                polyline: false,
+                circlemarker: false,
+            },
+            edit: { featureGroup: drawnItems, remove: true }
+        });
+        map.addControl(drawControl);
+
+        // Блокируем рисование, если не авторизован
+        function updateDrawControlVisibility() {
+            const container = document.querySelector('.leaflet-draw');
+            if (container) {
+                container.style.display = isAuthorized ? 'block' : 'none';
+            }
+        }
+        // Начальная видимость
+        setTimeout(updateDrawControlVisibility, 100);
+
+        // Обработчик создания фигур
         map.on(L.Draw.Event.CREATED, function(e) {
+            if (!isAuthorized) {
+                showToast('⚠️ Войдите для добавления фигур');
+                // Удалить созданную фигуру
+                const layer = e.layer;
+                if (layer) {
+                    drawnItems.removeLayer(layer);
+                }
+                return;
+            }
             const layer = e.layer;
             const color = drawColor.value;
             if (layer instanceof L.Polygon || layer instanceof L.Rectangle || layer instanceof L.Circle) {
@@ -1140,24 +1520,28 @@
                         riskLayers[target].addLayer(newLayer);
                         drawnItems.removeLayer(layer);
                         map.closePopup();
-                        updateURL();
+                        // Сохраняем изменения
+                        saveCurrentDayData();
+                        showToast('✅ Полигон добавлен');
                     });
                 });
                 drawnItems.addLayer(layer);
-                updateURL();
+                saveCurrentDayData();
             } else if (layer instanceof L.Marker) {
                 const m = L.marker(layer.getLatLng(), { icon: L.divIcon({ html: '📍', className: '', iconSize: [22, 22] }) });
                 const syn = document.getElementById('synopticName').value || 'CSF';
                 m.bindPopup(`Маркер<br>Синоптик: ${syn}`);
                 riskLayers.categorical.addLayer(m);
-                updateURL();
+                saveCurrentDayData();
+                showToast('📍 Маркер добавлен');
             }
         });
 
         // ================================================================
-        //  10. СГЛАЖИВАНИЕ
+        //  12. ДРУГИЕ КНОПКИ
         // ================================================================
         document.getElementById('smoothBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
             const layers = drawnItems.getLayers();
             if (layers.length === 0) { alert('Нет полигонов для сглаживания.'); return; }
             let count = 0;
@@ -1207,42 +1591,47 @@
                     } catch (e) { console.warn('Сглаживание не удалось:', e); }
                 }
             });
-            if (count > 0) { updateURL();
-                alert(`✅ Сглажено ${count} полигонов.`); } else { alert('Нет подходящих полигонов.'); }
+            if (count > 0) { saveCurrentDayData();
+                showToast(`✅ Сглажено ${count} полигонов`); } else { alert('Нет подходящих полигонов.'); }
         });
 
-        // ================================================================
-        //  11. УДАЛЕНИЕ И ОЧИСТКА
-        // ================================================================
         document.getElementById('deleteSelectedBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
             const layers = drawnItems.getLayers();
             if (layers.length === 0) { alert('Нет фигур для удаления.'); return; }
             layers.forEach(l => drawnItems.removeLayer(l));
-            updateURL();
+            saveCurrentDayData();
+            showToast('🗑️ Выделенные фигуры удалены');
         });
 
         document.getElementById('clearAllBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
             if (!confirm('Удалить ВСЕ фигуры и слои?')) return;
             drawnItems.clearLayers();
             Object.values(riskLayers).forEach(g => g.clearLayers());
-            updateURL();
+            saveCurrentDayData();
+            showToast('🧹 Все слои очищены');
         });
 
         // ================================================================
-        //  12. ЭКСПОРТ / ИМПОРТ
+        //  13. ЭКСПОРТ / ИМПОРТ
         // ================================================================
         document.getElementById('exportGeoJSON').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для экспорта'); return; }
+            saveCurrentDayData();
             const fc = getAllFeatures();
-            const blob = new Blob([JSON.stringify(fc, null, 2)], { type: 'application/json' });
+            const blob = new Blob([JSON.stringify({ type: 'FeatureCollection', features: fc }, null, 2)], { type: 'application/json' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `CSF_forecast_${new Date().toISOString().slice(0,10)}.geojson`;
+            a.download = `CSF_day${currentDay}_${new Date().toISOString().slice(0,10)}.geojson`;
             a.click();
             URL.revokeObjectURL(url);
+            showToast('📤 GeoJSON экспортирован');
         });
 
         document.getElementById('importGeoJSON').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для импорта'); return; }
             document.getElementById('fileInput').click();
         });
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -1253,9 +1642,75 @@
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (data.type !== 'FeatureCollection') { alert('Неверный формат'); return; }
-                    loadFeaturesFromData(data);
-                    updateURL();
-                    alert('✅ Импорт завершён, URL обновлён!');
+                    // Загружаем в текущий день
+                    const dayData = getCurrentDayData();
+                    // Очищаем текущие слои и добавляем новые
+                    Object.values(riskLayers).forEach(g => g.clearLayers());
+                    drawnItems.clearLayers();
+                    // Загружаем фичи
+                    data.features.forEach(f => {
+                        if (!f.geometry) return;
+                        const props = f.properties || {};
+                        const style = props._style || {
+                            color: '#ffaa33',
+                            weight: 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25,
+                            _origColor: '#ffaa33',
+                            _hatch: false,
+                            _hatchColor: '#ffaa33'
+                        };
+                        const layer = L.geoJSON(f, {
+                            style: function() {
+                                return {
+                                    color: style.color || '#ffaa33',
+                                    weight: style.weight || 2,
+                                    opacity: style.opacity || 0.9,
+                                    fillOpacity: style.fillOpacity || 0.25,
+                                    dashArray: style.dashArray || null,
+                                    fillColor: style.fillColor || style.color || '#ffaa33'
+                                };
+                            }
+                        });
+                        const origColor = style._origColor || style.color || '#ffaa33';
+                        layer.options._origColor = origColor;
+                        layer.eachLayer(sub => {
+                            sub.options._origColor = origColor;
+                            if (style.dashArray) sub.options.dashArray = style.dashArray;
+                            else delete sub.options.dashArray;
+                        });
+                        if (style._hatch === true) {
+                            const hatchColor = style._hatchColor || origColor;
+                            const patternId = ensureHatchPattern(hatchColor);
+                            layer.setStyle({
+                                fill: true,
+                                fillColor: `url(#${patternId})`,
+                                fillOpacity: 1,
+                                color: hatchColor,
+                                weight: 2,
+                                opacity: 0.9
+                            });
+                            layer.options._hatch = true;
+                            layer.options._hatchColor = hatchColor;
+                            layer.eachLayer(sub => {
+                                sub.options._hatch = true;
+                                sub.options._hatchColor = hatchColor;
+                                sub.options.fillColor = `url(#${patternId})`;
+                                sub.options.fillOpacity = 1;
+                            });
+                        }
+                        if (props._popup) {
+                            layer.bindPopup(props._popup);
+                        }
+                        const key = props._layer || 'categorical';
+                        if (riskLayers[key]) {
+                            riskLayers[key].addLayer(layer);
+                        } else {
+                            drawnItems.addLayer(layer);
+                        }
+                    });
+                    saveCurrentDayData();
+                    showToast('✅ Импорт завершён');
                 } catch (err) { alert('Ошибка импорта: ' + err.message); }
             };
             reader.readAsText(file);
@@ -1263,34 +1718,72 @@
         });
 
         // ================================================================
-        //  13. ЛЕГЕНДА
+        //  14. ЛЕГЕНДА И ТОСТ
         // ================================================================
         document.getElementById('legendToggle').addEventListener('click', function() {
             document.getElementById('legendPanel').classList.toggle('show');
         });
 
+        let toastTimeout;
+
+        function showToast(msg) {
+            const el = document.getElementById('toast');
+            el.textContent = msg;
+            el.classList.add('show');
+            clearTimeout(toastTimeout);
+            toastTimeout = setTimeout(() => el.classList.remove('show'), 3000);
+        }
+
         // ================================================================
-        //  14. ИМЯ СИНОПТИКА
+        //  15. СВЯЗКА СЕЛЕКТОРОВ ЦВЕТА
+        // ================================================================
+        const convSel = document.getElementById('convectiveSelect');
+        const torSel = document.getElementById('tornadoSelect');
+        const windSel = document.getElementById('windSelect');
+        const warnSel = document.getElementById('warningSelect');
+
+        function updateColor() {
+            const active = document.activeElement;
+            let color = convSel.value;
+            if (active === torSel) color = torSel.value;
+            else if (active === windSel) color = windSel.value;
+            else if (active === warnSel) color = warnSel.value;
+            else color = convSel.value;
+            drawColor.value = color;
+            if (drawControl && drawControl._toolbars && drawControl._toolbars.draw) {
+                const modes = drawControl._toolbars.draw._modes;
+                if (modes.polygon) modes.polygon.handler.options.shapeOptions.color = color;
+                if (modes.rectangle) modes.rectangle.handler.options.shapeOptions.color = color;
+                if (modes.circle) modes.circle.handler.options.shapeOptions.color = color;
+            }
+        }
+
+        convSel.addEventListener('change', updateColor);
+        torSel.addEventListener('change', updateColor);
+        windSel.addEventListener('change', updateColor);
+        warnSel.addEventListener('change', updateColor);
+        const drawColor = document.getElementById('drawColor');
+        drawColor.value = convSel.value;
+
+        // ================================================================
+        //  16. ИМЯ СИНОПТИКА
         // ================================================================
         const synInput = document.getElementById('synopticName');
-        if (localStorage.getItem('csf_synoptic')) synInput.value = localStorage.getItem('csf_synoptic');
         synInput.addEventListener('change', function() {
-            localStorage.setItem('csf_synoptic', this.value);
-            updateURL();
+            if (isAuthorized) {
+                saveCurrentDayData();
+            }
         });
 
         // ================================================================
-        //  15. ЗАГРУЗКА ПРИ СТАРТЕ
+        //  17. ЗАПУСК
         // ================================================================
-        loadFromURL();
+        init();
 
         console.log('✅ CSF | SPC Russia — карта загружена');
-        console.log('🔗 Данные синхронизируются через URL – поделитесь ссылкой с другими устройствами');
-        console.log('📚 Слои переключаются кнопками в топбаре: Конв., Смерч, Ветер, Предупр.');
-        console.log('🎨 Цвет и штриховка полигонов сохраняются в URL');
-        console.log('🌪️ Для слоёв "Смерч" и "Ветер" при выборе "ШТРИХ" автоматически включается штриховка заливки (SIG)');
-        console.log('📋 Нажмите "Скопировать ссылку", чтобы поделиться прогнозом');
+        console.log('🔐 Редактирование доступно только после входа (пароль: csf2026)');
+        console.log('📅 Три дня прогноза с автоматическим сдвигом');
+        console.log('🔗 URL не обновляется автоматически — используйте "Сохранить" или "Скопировать ссылку"');
     </script>
-
 </body>
 </html>
