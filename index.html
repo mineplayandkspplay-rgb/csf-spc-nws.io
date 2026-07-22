@@ -20,9 +20,7 @@
     </script>
 
     <style>
-        /* ===== Все стили остаются без изменений ===== */
-        /* ... (оставляем тот же CSS, что был) ... */
-        /* Для краткости я вставлю полный CSS из предыдущего кода, но в ответе я его повторю, чтобы файл был самодостаточным */
+        /* ===== GLOBAL ===== */
         * {
             margin: 0;
             padding: 0;
@@ -38,22 +36,709 @@
             user-select: none;
             overflow: hidden;
         }
-        /* ... остальной CSS полностью повторяет то, что было в index (3).html ... */
-        /* Я приведу полный код в финальном ответе, здесь показываю суть */
+
+        /* ===== TOPBAR ===== */
+        .topbar {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 4px 8px;
+            padding: 4px 10px;
+            background: #141c2b;
+            border-bottom: 2px solid #2a3a5a;
+            flex-shrink: 0;
+            z-index: 10;
+            font-size: 0.75rem;
+            min-height: 40px;
+        }
+        .topbar .brand {
+            font-weight: 700;
+            font-size: 1rem;
+            background: linear-gradient(135deg, #ffb347, #ff6b4a);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: 0.5px;
+            margin-right: 4px;
+        }
+        .topbar .brand small {
+            font-weight: 400;
+            font-size: 0.6rem;
+            -webkit-text-fill-color: #8899bb;
+            background: none;
+        }
+        .topbar label {
+            font-size: 0.7rem;
+            color: #aabbdd;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+        }
+        .topbar select,
+        .topbar input[type="color"] {
+            background: #1e2a3e;
+            border: 1px solid #3a4a6a;
+            color: #e0e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .topbar input[type="color"] {
+            width: 24px;
+            height: 24px;
+            padding: 1px;
+            border-radius: 50%;
+        }
+        .topbar .btn {
+            background: #1e2a3e;
+            border: 1px solid #3a4a6a;
+            color: #c0d0ee;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            cursor: pointer;
+            transition: 0.2s;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+        .topbar .btn:hover {
+            background: #2a3a5a;
+            border-color: #5a7aaa;
+        }
+        .topbar .btn.danger:hover {
+            background: #6a2a2a;
+            border-color: #aa4a4a;
+        }
+        .topbar .btn.share-btn {
+            background: #2a5a3a;
+            border-color: #4a8a5a;
+        }
+        .topbar .btn.share-btn:hover {
+            background: #3a7a4a;
+        }
+        .topbar .btn.save-btn {
+            background: #2a4a7a;
+            border-color: #4a7aaa;
+        }
+        .topbar .btn.save-btn:hover {
+            background: #3a5a8a;
+        }
+        .topbar .btn.auth-btn {
+            background: #5a3a2a;
+            border-color: #8a5a4a;
+        }
+        .topbar .btn.auth-btn:hover {
+            background: #7a4a3a;
+        }
+        .topbar .btn.auth-btn.active {
+            background: #2a5a3a;
+            border-color: #4a8a5a;
+        }
+        .topbar .sep {
+            width: 1px;
+            height: 20px;
+            background: #2a3a5a;
+            flex-shrink: 0;
+        }
+        .risk-select {
+            background: #1e2a3e;
+            border: 1px solid #3a4a6a;
+            color: #e0e8f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            cursor: pointer;
+        }
+        .risk-label {
+            font-size: 0.6rem;
+            color: #8899bb;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Layer toggles */
+        .layer-toggles {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+        .layer-toggle-btn {
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            background: #1e2a3e;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            padding: 1px 6px 1px 4px;
+            font-size: 0.6rem;
+            color: #8899bb;
+            cursor: pointer;
+            transition: 0.15s;
+            white-space: nowrap;
+            font-weight: 600;
+            height: 22px;
+        }
+        .layer-toggle-btn .dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 2px;
+            flex-shrink: 0;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+        }
+        .layer-toggle-btn.active {
+            border-color: #8ab4f8;
+            background: #1e304a;
+            color: #e0e8f0;
+        }
+        .layer-toggle-btn.active .dot {
+            border-color: #8ab4f8;
+        }
+        .layer-toggle-btn:hover {
+            background: #2a3a5a;
+        }
+        .layer-toggle-btn .label-text {
+            font-size: 0.55rem;
+            letter-spacing: 0.3px;
+        }
+        .layer-toggle-btn .badge {
+            font-size: 0.5rem;
+            background: #2a3a5a;
+            padding: 0 4px;
+            border-radius: 8px;
+            color: #8899bb;
+        }
+        .layer-toggle-btn.active .badge {
+            background: #3a5a7a;
+            color: #c0d0ee;
+        }
+
+        /* Day toggles */
+        .day-toggles {
+            display: flex;
+            gap: 3px;
+        }
+        .day-btn {
+            background: #1e2a3e;
+            border: 2px solid transparent;
+            border-radius: 4px;
+            padding: 1px 8px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            color: #8899bb;
+            cursor: pointer;
+            transition: 0.15s;
+            height: 22px;
+        }
+        .day-btn.active {
+            border-color: #ffb347;
+            background: #2a3a4a;
+            color: #ffb347;
+        }
+        .day-btn:hover {
+            background: #2a3a5a;
+        }
+
+        /* ===== MAP ===== */
+        #map {
+            flex: 1;
+            width: 100%;
+            background: #0b0f1a;
+            position: relative;
+        }
+
+        /* ===== LEGEND ===== */
+        .legend-toggle {
+            position: absolute;
+            bottom: 30px;
+            right: 10px;
+            z-index: 1000;
+            background: #141c2b;
+            border: 1px solid #2a3a5a;
+            border-radius: 8px;
+            padding: 4px 10px;
+            color: #c0d0ee;
+            font-size: 0.7rem;
+            cursor: pointer;
+            font-weight: 600;
+            backdrop-filter: blur(4px);
+        }
+        .legend-toggle:hover {
+            background: #1e2a3e;
+        }
+        .legend-panel {
+            position: absolute;
+            bottom: 70px;
+            right: 10px;
+            z-index: 1000;
+            background: #141c2be6;
+            backdrop-filter: blur(8px);
+            border: 1px solid #2a3a5a;
+            border-radius: 10px;
+            padding: 10px 14px;
+            min-width: 200px;
+            display: none;
+            font-size: 0.65rem;
+            color: #c0d0ee;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        .legend-panel.show {
+            display: block;
+        }
+        .legend-panel .item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 2px 0;
+        }
+        .legend-panel .color-box {
+            width: 16px;
+            height: 10px;
+            border-radius: 2px;
+            border: 1px solid #3a4a6a;
+            flex-shrink: 0;
+        }
+        .legend-panel .label {
+            font-weight: 500;
+            font-size: 0.7rem;
+        }
+        .legend-panel .sub {
+            color: #8899bb;
+            font-size: 0.55rem;
+        }
+        .legend-panel .section-title {
+            font-weight: 700;
+            margin: 4px 0 2px 0;
+            color: #e0e8f0;
+            font-size: 0.75rem;
+            border-bottom: 1px solid #2a3a5a;
+            padding-bottom: 2px;
+        }
+        .legend-panel .hatch-sample {
+            background: repeating-linear-gradient(45deg, #ffaa00 0px, #ffaa00 3px, transparent 3px, transparent 6px);
+            border-color: #ffaa00;
+        }
+
+        /* ===== TOAST ===== */
+        .toast {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1e2a3e;
+            border: 1px solid #4a7aaa;
+            border-radius: 8px;
+            padding: 8px 18px;
+            color: #e0e8f0;
+            font-size: 0.8rem;
+            z-index: 9999;
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        /* ===== AUTH MODAL ===== */
+        .auth-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(4px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+        }
+        .auth-modal.show {
+            display: flex;
+        }
+        .auth-modal .modal-box {
+            background: #141c2b;
+            border: 2px solid #3a4a6a;
+            border-radius: 12px;
+            padding: 24px;
+            min-width: 300px;
+            max-width: 90%;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
+        }
+        .auth-modal .modal-box h2 {
+            color: #ffb347;
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+        .auth-modal .modal-box label {
+            display: block;
+            font-size: 0.8rem;
+            color: #aabbdd;
+            margin-top: 10px;
+        }
+        .auth-modal .modal-box input {
+            width: 100%;
+            background: #0b121f;
+            border: 1px solid #3a4a6a;
+            color: #e0e8f0;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            margin-top: 4px;
+        }
+        .auth-modal .modal-box .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            justify-content: flex-end;
+        }
+        .auth-modal .modal-box .btn-row .btn {
+            padding: 6px 16px;
+            font-size: 0.8rem;
+        }
+        .auth-modal .modal-box .error {
+            color: #ff6b4a;
+            font-size: 0.75rem;
+            margin-top: 6px;
+        }
+
+        /* ================================================================
+           СОВРЕМЕННАЯ ПАНЕЛЬ ИНСТРУМЕНТОВ
+           ================================================================ */
+        .leaflet-draw-toolbar {
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            padding: 6px !important;
+        }
+
+        .leaflet-draw-toolbar a {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 14px !important;
+            background: rgba(20, 28, 43, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(42, 58, 90, 0.6) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            color: #aabbdd !important;
+            font-size: 22px !important;
+            line-height: 1 !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            text-decoration: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background-image: none !important;
+            position: relative !important;
+        }
+        .leaflet-draw-toolbar a,
+        .leaflet-draw-toolbar a:hover,
+        .leaflet-draw-toolbar a:focus,
+        .leaflet-draw-toolbar a:active,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-polygon,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-circle,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-marker,
+        .leaflet-draw-toolbar a.leaflet-draw-edit-edit,
+        .leaflet-draw-toolbar a.leaflet-draw-edit-remove {
+            background-image: none !important;
+        }
+
+        .leaflet-draw-toolbar a::before {
+            font-size: 24px !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-polygon::before {
+            content: "⬡";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle::before {
+            content: "▭";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-circle::before {
+            content: "◯";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-marker::before {
+            content: "📍";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-edit-edit::before {
+            content: "✎";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-edit-remove::before {
+            content: "✕";
+        }
+
+        .leaflet-draw-toolbar a:hover {
+            background: rgba(42, 58, 90, 0.9) !important;
+            border-color: rgba(90, 122, 170, 0.8) !important;
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+
+        .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled {
+            background: rgba(255, 179, 71, 0.25) !important;
+            border-color: #ffb347 !important;
+            box-shadow: 0 0 25px rgba(255, 179, 71, 0.2), inset 0 0 25px rgba(255, 179, 71, 0.05) !important;
+            color: #ffb347 !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 14px !important;
+            background: rgba(20, 28, 43, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(42, 58, 90, 0.6) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            color: #aabbdd !important;
+            font-size: 22px !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            background-image: none !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a:hover {
+            background: rgba(42, 58, 90, 0.9) !important;
+            border-color: rgba(90, 122, 170, 0.8) !important;
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a.leaflet-draw-toolbar-button-enabled {
+            background: rgba(255, 179, 71, 0.25) !important;
+            border-color: #ffb347 !important;
+            box-shadow: 0 0 25px rgba(255, 179, 71, 0.2), inset 0 0 25px rgba(255, 179, 71, 0.05) !important;
+            color: #ffb347 !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a {
+            width: 48px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+            background: rgba(20, 28, 43, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(42, 58, 90, 0.6) !important;
+            color: #aabbdd !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            background-image: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            line-height: 1 !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a:hover {
+            background: rgba(42, 58, 90, 0.9) !important;
+            border-color: rgba(90, 122, 170, 0.8) !important;
+            color: #ffffff !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions .leaflet-draw-actions-bottom {
+            border-top: none !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-draw-polygon span,
+        .leaflet-draw-toolbar .leaflet-draw-draw-rectangle span,
+        .leaflet-draw-toolbar .leaflet-draw-draw-circle span,
+        .leaflet-draw-toolbar .leaflet-draw-draw-marker span,
+        .leaflet-draw-toolbar .leaflet-draw-edit-edit span,
+        .leaflet-draw-toolbar .leaflet-draw-edit-remove span {
+            display: none !important;
+        }
+
+        .leaflet-draw-toolbar a::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 58px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20, 28, 43, 0.95);
+            backdrop-filter: blur(8px);
+            color: #e0e8f0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(42, 58, 90, 0.6);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(-50%) scale(0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.3px;
+            z-index: 999;
+        }
+        .leaflet-draw-toolbar a:hover::after {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+        }
+
+        @media (max-width: 820px) {
+            .topbar .brand {
+                font-size: 0.8rem;
+            }
+            .topbar .sep {
+                display: none;
+            }
+            .topbar label {
+                font-size: 0.6rem;
+            }
+            .topbar .btn {
+                font-size: 0.55rem;
+                padding: 2px 6px;
+            }
+            .risk-select {
+                font-size: 0.6rem;
+                min-width: 50px;
+            }
+            .risk-label {
+                font-size: 0.5rem;
+            }
+            .layer-toggle-btn .label-text {
+                display: none;
+            }
+            .layer-toggle-btn .badge {
+                display: none;
+            }
+            .layer-toggle-btn {
+                padding: 1px 4px;
+            }
+            .day-btn {
+                font-size: 0.5rem;
+                padding: 1px 5px;
+            }
+            .leaflet-draw-toolbar a {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 18px !important;
+                border-radius: 12px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 18px !important;
+                border-radius: 12px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a {
+                width: 40px !important;
+                height: 32px !important;
+                font-size: 13px !important;
+                border-radius: 8px !important;
+            }
+            .leaflet-draw-toolbar a::after {
+                display: none !important;
+            }
+        }
+        @media (max-width: 600px) {
+            .topbar {
+                gap: 2px 4px;
+                padding: 3px 6px;
+            }
+            .topbar .brand {
+                font-size: 0.7rem;
+                margin-right: 2px;
+            }
+            .topbar .brand small {
+                font-size: 0.5rem;
+            }
+            .topbar .btn {
+                font-size: 0.5rem;
+                padding: 1px 5px;
+            }
+            .layer-toggle-btn .dot {
+                width: 8px;
+                height: 8px;
+            }
+            .layer-toggle-btn {
+                height: 18px;
+                font-size: 0.5rem;
+            }
+            .day-btn {
+                height: 18px;
+                font-size: 0.5rem;
+            }
+            .leaflet-draw-toolbar a {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 16px !important;
+                border-radius: 10px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 16px !important;
+                border-radius: 10px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a {
+                width: 36px !important;
+                height: 28px !important;
+                font-size: 12px !important;
+                border-radius: 6px !important;
+            }
+            .leaflet-draw-toolbar {
+                gap: 4px !important;
+                padding: 4px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub {
+                gap: 4px !important;
+            }
+        }
     </style>
 </head>
 <body>
 
-    <!-- ===== TOPBAR (без кнопки "Опубликовать") ===== -->
+    <!-- ===== TOPBAR ===== -->
     <div class="topbar">
         <div class="brand">CSF <small>| SPC Russia</small></div>
+
         <!-- Дни -->
         <div class="day-toggles" id="dayToggles">
             <button class="day-btn active" data-day="1">Day 1</button>
             <button class="day-btn" data-day="2">Day 2</button>
             <button class="day-btn" data-day="3">Day 3</button>
         </div>
+
         <span class="sep"></span>
+
         <!-- Кнопки слоёв -->
         <div class="layer-toggles" id="layerToggles">
             <button class="layer-toggle-btn active" data-layer="categorical" title="Конвективный риск">
@@ -77,6 +762,7 @@
                 <span class="badge">⚠️</span>
             </button>
         </div>
+
         <span class="sep"></span>
 
         <label>🎨 Тема
@@ -87,9 +773,9 @@
                 <option value="terrain">Рельеф</option>
             </select>
         </label>
+
         <span class="sep"></span>
 
-        <!-- Селекторы рисков -->
         <span class="risk-label">⚡ Конвективный</span>
         <select class="risk-select" id="convectiveSelect">
             <option value="#66bb66">TSTM</option>
@@ -158,7 +844,6 @@
 
         <button class="btn auth-btn" id="authBtn">🔒 Войти</button>
         <button class="btn save-btn" id="saveBtn">💾 Сохранить</button>
-        <!-- Кнопка "Опубликовать" УДАЛЕНА -->
         <button class="btn share-btn" id="shareBtn">📋 Скопировать ссылку</button>
 
         <button class="btn" id="exportGeoJSON">📤 Export</button>
@@ -189,7 +874,6 @@
     <!-- ===== ЛЕГЕНДА ===== -->
     <div class="legend-toggle" id="legendToggle">📖 Легенда</div>
     <div class="legend-panel" id="legendPanel">
-        <!-- содержимое легенды такое же -->
         <div class="section-title">⚡ Конвективный риск</div>
         <div class="item"><span class="color-box" style="background:#66bb66;"></span><span class="label">TSTM</span><span class="sub">— грозы</span></div>
         <div class="item"><span class="color-box" style="background:#44aa44;"></span><span class="label">MRGL</span><span class="sub">— маргинальный</span></div>
@@ -197,12 +881,41 @@
         <div class="item"><span class="color-box" style="background:#e8943a;"></span><span class="label">ENH</span><span class="sub">— усиленный</span></div>
         <div class="item"><span class="color-box" style="background:#dd4444;"></span><span class="label">MDT</span><span class="sub">— умеренный</span></div>
         <div class="item"><span class="color-box" style="background:#cc44cc;"></span><span class="label">HIGH</span><span class="sub">— высокий</span></div>
-        <!-- ... остальное аналогично -->
+
+        <div class="section-title">🌪️ Вероятность смерча (SPC)</div>
+        <div class="item"><span class="color-box" style="background:#4caf50;"></span><span class="label">2%</span><span class="sub">(See Text)</span></div>
+        <div class="item"><span class="color-box" style="background:#8d6e63;"></span><span class="label">5%</span><span class="sub">(SLGT)</span></div>
+        <div class="item"><span class="color-box" style="background:#fdd835;"></span><span class="label">10%</span><span class="sub">(SLGT)</span></div>
+        <div class="item"><span class="color-box" style="background:#e53935;"></span><span class="label">15%</span><span class="sub">(MDT)</span></div>
+        <div class="item"><span class="color-box" style="background:#ab47bc;"></span><span class="label">30%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:#7b1fa2;"></span><span class="label">45%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:#1a237e;"></span><span class="label">60%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:repeating-linear-gradient(45deg, #ffaa00 0px, #ffaa00 3px, transparent 3px, transparent 6px); border-color: #ffaa00;"></span><span class="label">ШТРИХ</span><span class="sub">(значит. EF2+)</span></div>
+
+        <div class="section-title">💨 Вероятность ветра (SPC)</div>
+        <div class="item"><span class="color-box" style="background:#8d6e63;"></span><span class="label">5%</span><span class="sub">(See Text)</span></div>
+        <div class="item"><span class="color-box" style="background:#fdd835;"></span><span class="label">15%</span><span class="sub">(SLGT)</span></div>
+        <div class="item"><span class="color-box" style="background:#e53935;"></span><span class="label">30%</span><span class="sub">(ENH)</span></div>
+        <div class="item"><span class="color-box" style="background:#ab47bc;"></span><span class="label">45%</span><span class="sub">(MDT)</span></div>
+        <div class="item"><span class="color-box" style="background:#7b1fa2;"></span><span class="label">60%</span><span class="sub">(HIGH)</span></div>
+        <div class="item"><span class="color-box" style="background:repeating-linear-gradient(45deg, #ffaa00 0px, #ffaa00 3px, transparent 3px, transparent 6px); border-color: #ffaa00;"></span><span class="label">ШТРИХ</span><span class="sub">(порывы ≥ 65 узлов)</span></div>
+
+        <div class="section-title">⚠️ Предупреждения</div>
+        <div class="item"><span class="color-box" style="background:#ffcc00;"></span>Severe T-storm</div>
+        <div class="item"><span class="color-box" style="background:#ff3333;"></span>Tornado</div>
+        <div class="item"><span class="color-box" style="background:#cc00cc;"></span>Tornado Emergency</div>
+        <div class="item"><span class="color-box" style="background:#3399ff;"></span>Flash Flood</div>
+        <div class="item"><span class="color-box" style="background:#33cc99;"></span>Marine</div>
+        <div class="section-title" style="margin-top:6px;">📚 Слои</div>
+        <div class="item"><span class="color-box" style="background:#e8943a;"></span>Конвективный риск</div>
+        <div class="item"><span class="color-box" style="background:#ab47bc;"></span>Риск смерча</div>
+        <div class="item"><span class="color-box" style="background:#fdd835;"></span>Риск ветра</div>
+        <div class="item"><span class="color-box" style="background:#ff3333;"></span>Метео предупреждения</div>
     </div>
 
     <script>
         // ================================================================
-        //  0. НИКАКОЙ СИНХРОНИЗАЦИИ — ТОЛЬКО ЛОКАЛЬНОЕ ХРАНЕНИЕ
+        //  НИКАКОГО ОБЛАКА! ТОЛЬКО ЛОКАЛЬНОЕ ХРАНЕНИЕ (localStorage + URL)
         // ================================================================
 
         // ================================================================
@@ -243,7 +956,6 @@
         let currentDay = 1;
         let drawControl = null;
 
-        // Стандартный пустой прогноз
         const defaultStore = {
             day1: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
             day2: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
@@ -262,7 +974,6 @@
         };
         const drawnItems = L.featureGroup().addTo(map);
 
-        // Глобальные селекторы
         const convSel = document.getElementById('convectiveSelect');
         const torSel = document.getElementById('tornadoSelect');
         const windSel = document.getElementById('windSelect');
@@ -568,12 +1279,11 @@
         }
 
         // ================================================================
-        //  8. ЛОКАЛЬНОЕ СОХРАНЕНИЕ (localStorage + URL)
+        //  8. ЛОКАЛЬНОЕ ХРАНЕНИЕ (localStorage + URL)
         // ================================================================
         function saveToLocalStorage() {
             try {
                 localStorage.setItem('csf_forecast', JSON.stringify(store));
-                // Обновляем URL для шаринга
                 const encoded = btoa(encodeURIComponent(JSON.stringify(store)));
                 const url = new URL(window.location);
                 url.searchParams.set('data', encoded);
@@ -593,7 +1303,6 @@
                         return true;
                     }
                 }
-                // Попробуем загрузить из URL
                 const params = new URLSearchParams(window.location.search);
                 const dataParam = params.get('data');
                 if (dataParam) {
@@ -601,21 +1310,19 @@
                         const decoded = JSON.parse(decodeURIComponent(atob(dataParam)));
                         if (decoded.day1 && decoded.day2 && decoded.day3) {
                             store = decoded;
-                            // Сохраняем в localStorage, чтобы при перезагрузке не потерять
                             localStorage.setItem('csf_forecast', JSON.stringify(store));
                             return true;
                         }
-                    } catch (e) { /* невалидные данные */ }
+                    } catch (e) {}
                 }
                 return false;
             } catch (e) {
-                console.warn('Ошибка загрузки из localStorage:', e);
                 return false;
             }
         }
 
         // ================================================================
-        //  9. АВТОСОХРАНЕНИЕ (без внешних вызовов)
+        //  9. АВТОСОХРАНЕНИЕ (локальное)
         // ================================================================
         function scheduleSave() {
             if (saveTimer) clearTimeout(saveTimer);
@@ -629,21 +1336,18 @@
         // ================================================================
         //  10. ИНИЦИАЛИЗАЦИЯ
         // ================================================================
-        async function init() {
+        function init() {
             shiftDaysIfNeeded();
 
-            // Загружаем данные (сначала из localStorage, потом из URL)
-            const hasData = loadFromLocalStorage();
-            if (!hasData) {
+            const localLoaded = loadFromLocalStorage();
+            if (!localLoaded) {
                 console.log('ℹ️ Нет сохранённых данных, создаём пустой прогноз');
                 store = JSON.parse(JSON.stringify(defaultStore));
                 saveToLocalStorage();
             }
 
-            // Отображаем текущий день
             loadDay(currentDay);
 
-            // Авторизация
             const auth = localStorage.getItem('csf_auth');
             if (auth === 'true') {
                 isAuthorized = true;
@@ -1285,7 +1989,7 @@
         //  19. ЗАПУСК
         // ================================================================
         init();
-        console.log('✅ CSF | SPC Russia — карта загружена, синхронизация отсутствует, данные локальны');
+        console.log('✅ CSF | SPC Russia — полностью локальная версия, без облачных сервисов');
         console.log('🔐 Рисование доступно после входа');
     </script>
 </body>
