@@ -923,18 +923,16 @@
         // ================================================================
         //  0. НАСТРОЙКА FIREBASE
         // ================================================================
-        // ⬇️ ВСТАВЬТЕ ВАШ КОНФИГ FIREBASE (из консоли Firebase)
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDZ-Fmk0nfMrZjYQxbAgtvdg3DzZF1QbhM",
-  authDomain: "csf-forecast.firebaseapp.com",
-  databaseURL: "https://csf-forecast-default-rtdb.firebaseio.com",
-  projectId: "csf-forecast",
-  storageBucket: "csf-forecast.firebasestorage.app",
-  messagingSenderId: "830466095965",
-  appId: "1:830466095965:web:89b62e7a9de7e0eeb986b4",
-  measurementId: "G-1YZ7DPEQ6R"
-};
+        const firebaseConfig = {
+            apiKey: "AIzaSyDZ-Fmk0nfMrZjYQxbAgtvdg3DzZF1QbhM",
+            authDomain: "csf-forecast.firebaseapp.com",
+            databaseURL: "https://csf-forecast-default-rtdb.firebaseio.com",
+            projectId: "csf-forecast",
+            storageBucket: "csf-forecast.firebasestorage.app",
+            messagingSenderId: "830466095965",
+            appId: "1:830466095965:web:89b62e7a9de7e0eeb986b4",
+            measurementId: "G-1YZ7DPEQ6R"
+        };
 
         let firebaseInitialized = false;
         let db = null;
@@ -1000,6 +998,9 @@ const firebaseConfig = {
         };
         const drawnItems = L.featureGroup().addTo(map);
         let saveTimer = null;
+
+        // Флаг для предотвращения повторной обработки подписки
+        let isApplyingRemoteData = false;
 
         // ================================================================
         //  3. УПРАВЛЕНИЕ ДНЯМИ
@@ -1408,50 +1409,114 @@ const firebaseConfig = {
             } catch (e) { console.warn('localStorage не доступен', e); }
         }
 
-        function loadData() {
-            let data = null;
-            if (firebaseInitialized && db) {
-                // синхронно загрузить один раз
-                db.ref('forecast').once('value').then(snapshot => {
-                    const val = snapshot.val();
-                    if (val) {
-                        data = val;
-                        applyLoadedData(data);
+        // FIX: новая функция загрузки – сначала Firebase, потом localStorage, потом URL как резерв
+        function loadDataFromSources() {
+            return new Promise((resolve) => {
+                if (firebaseInitialized && db) {
+                    db.ref('forecast').once('value').then(snapshot => {
+                        const val = snapshot.val();
+                        if (val) {
+                            applyLoadedData(val);
+                            resolve(true);
+                        } else {
+                            // в Firebase пусто – пробуем localStorage
+                            const localData = loadFromLocalStorageRaw();
+                            if (localData) {
+                                applyLoadedData(localData);
+                                // записываем в Firebase, чтобы синхронизировать
+                                if (firebaseInitialized && db) {
+                                    db.ref('forecast').set(store).catch(() => {});
+                                }
+                                resolve(true);
+                            } else {
+                                // ничего нет – пробуем URL как последний шанс
+                                const urlData = decodeDataFromURL();
+                                if (urlData) {
+                                    applyLoadedData(urlData);
+                                    if (firebaseInitialized && db) {
+                                        db.ref('forecast').set(store).catch(() => {});
+                                    }
+                                    resolve(true);
+                                } else {
+                                    resolve(false); // совсем пусто
+                                }
+                            }
+                        }
+                    }).catch(err => {
+                        console.warn('⚠️ Ошибка чтения из Firebase, загружаем localStorage', err);
+                        const localData = loadFromLocalStorageRaw();
+                        if (localData) {
+                            applyLoadedData(localData);
+                            resolve(true);
+                        } else {
+                            const urlData = decodeDataFromURL();
+                            if (urlData) {
+                                applyLoadedData(urlData);
+                                resolve(true);
+                            } else {
+                                resolve(false);
+                            }
+                        }
+                    });
+                } else {
+                    // Firebase не инициализирована
+                    const localData = loadFromLocalStorageRaw();
+                    if (localData) {
+                        applyLoadedData(localData);
+                        resolve(true);
                     } else {
-                        // если в Firebase пусто, пробуем localStorage
-                        loadFromLocalStorageAndApply();
+                        const urlData = decodeDataFromURL();
+                        if (urlData) {
+                            applyLoadedData(urlData);
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
                     }
-                }).catch(err => {
-                    console.warn('⚠️ Ошибка чтения из Firebase, загружаем localStorage', err);
-                    loadFromLocalStorageAndApply();
-                });
-            } else {
-                loadFromLocalStorageAndApply();
-            }
+                }
+            });
         }
 
-        function loadFromLocalStorageAndApply() {
+        function loadFromLocalStorageRaw() {
             try {
                 const raw = localStorage.getItem('csf_forecast');
                 if (raw) {
-                    const data = JSON.parse(raw);
-                    applyLoadedData(data);
-                } else {
-                    // ничего нет – оставляем дефолтный store
+                    return JSON.parse(raw);
                 }
             } catch (e) { console.warn('localStorage чтение не удалось', e); }
+            return null;
         }
 
+        // FIX: applyLoadedData теперь проверяет, не совпадают ли данные, чтобы избежать лишней перерисовки
         function applyLoadedData(data) {
-            if (data.day1 && data.day2 && data.day3) {
-                store.day1 = data.day1;
-                store.day2 = data.day2;
-                store.day3 = data.day3;
-                store.lastDayShift = data.lastDayShift || Date.now();
-                // перезагружаем текущий день
-                loadDay(currentDay);
-                showToast('📥 Данные загружены из облака');
+            if (!data || !data.day1 || !data.day2 || !data.day3) return;
+            // Проверяем, изменились ли данные
+            const current = {
+                day1: store.day1,
+                day2: store.day2,
+                day3: store.day3,
+                lastDayShift: store.lastDayShift
+            };
+            // Простое сравнение через JSON (не идеально, но для наших целей достаточно)
+            const currentStr = JSON.stringify(current);
+            const newStr = JSON.stringify({
+                day1: data.day1,
+                day2: data.day2,
+                day3: data.day3,
+                lastDayShift: data.lastDayShift || Date.now()
+            });
+            if (currentStr === newStr) {
+                // данные не изменились – ничего не делаем
+                return;
             }
+
+            store.day1 = data.day1;
+            store.day2 = data.day2;
+            store.day3 = data.day3;
+            store.lastDayShift = data.lastDayShift || Date.now();
+            // перезагружаем текущий день
+            loadDay(currentDay);
+            showToast('📥 Данные обновлены из облака');
         }
 
         function scheduleSave() {
@@ -1491,28 +1556,17 @@ const firebaseConfig = {
         // ================================================================
         //  10. ИНИЦИАЛИЗАЦИЯ
         // ================================================================
-        function init() {
+        async function init() {
             shiftDaysIfNeeded();
 
-            // сначала пытаемся загрузить из URL (приоритет)
-            const urlData = decodeDataFromURL();
-            if (urlData) {
-                store.day1 = urlData.day1 || store.day1;
-                store.day2 = urlData.day2 || store.day2;
-                store.day3 = urlData.day3 || store.day3;
-                store.lastDayShift = urlData.lastDayShift || Date.now();
-                saveToLocalStorage();
-                // если есть Firebase, сохраним туда же
-                if (firebaseInitialized && db) {
-                    db.ref('forecast').set(store).catch(() => {});
-                }
-                showToast('📥 Загружено из URL');
-            } else {
-                // загружаем из Firebase или localStorage
-                loadData();
+            // Загружаем данные из Firebase (или localStorage/URL)
+            const loaded = await loadDataFromSources();
+            if (!loaded) {
+                // Если ничего не загрузилось, оставляем дефолтный store (пустой)
+                console.log('ℹ️ Нет сохранённых данных, используем пустой прогноз');
             }
 
-            // после загрузки данных включаем авторизацию
+            // После загрузки данных включаем авторизацию
             const auth = localStorage.getItem('csf_auth');
             if (auth === 'true') {
                 isAuthorized = true;
@@ -1524,13 +1578,18 @@ const firebaseConfig = {
             }
             updateDayTitle();
 
-            // подписываемся на изменения в Firebase (реальное время)
+            // Подписываемся на изменения в Firebase (реальное время)
             if (firebaseInitialized && db) {
                 db.ref('forecast').on('value', snapshot => {
                     const val = snapshot.val();
                     if (val) {
-                        // если данные пришли не от этого же клиента (можно проверить timestamp)
-                        applyLoadedData(val);
+                        // Применяем данные, но не перезаписываем, если они от нас же
+                        // Используем флаг, чтобы не зациклиться
+                        if (!isApplyingRemoteData) {
+                            isApplyingRemoteData = true;
+                            applyLoadedData(val);
+                            setTimeout(() => { isApplyingRemoteData = false; }, 100);
+                        }
                     }
                 });
             }
