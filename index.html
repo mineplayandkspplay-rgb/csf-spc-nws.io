@@ -20,21 +20,24 @@
     </script>
 
     <style>
+        /* ===== GLOBAL ===== */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
         }
         body {
-            font-family: 'Segoe UI', system-ui, sans-serif;
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
             background: #0b0f1a;
             color: #e0e8f0;
             height: 100vh;
             display: flex;
             flex-direction: column;
             user-select: none;
+            overflow: hidden;
         }
 
+        /* ===== TOPBAR ===== */
         .topbar {
             display: flex;
             flex-wrap: wrap;
@@ -153,7 +156,7 @@
             white-space: nowrap;
         }
 
-        /* ----- КНОПКИ СЛОЁВ ----- */
+        /* Layer toggles */
         .layer-toggles {
             display: flex;
             align-items: center;
@@ -210,7 +213,7 @@
             color: #c0d0ee;
         }
 
-        /* Дни */
+        /* Day toggles */
         .day-toggles {
             display: flex;
             gap: 3px;
@@ -236,12 +239,15 @@
             background: #2a3a5a;
         }
 
+        /* ===== MAP ===== */
         #map {
             flex: 1;
             width: 100%;
             background: #0b0f1a;
+            position: relative;
         }
 
+        /* ===== LEGEND ===== */
         .legend-toggle {
             position: absolute;
             bottom: 30px;
@@ -315,6 +321,7 @@
             border-color: #ffaa00;
         }
 
+        /* ===== TOAST ===== */
         .toast {
             position: fixed;
             bottom: 80px;
@@ -331,17 +338,20 @@
             transition: opacity 0.3s;
             pointer-events: none;
             backdrop-filter: blur(4px);
-            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.6);
         }
         .toast.show {
             opacity: 1;
         }
 
-        /* Модальное окно входа */
+        /* ===== AUTH MODAL ===== */
         .auth-modal {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.7);
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
             backdrop-filter: blur(4px);
             display: none;
             align-items: center;
@@ -358,7 +368,7 @@
             padding: 24px;
             min-width: 300px;
             max-width: 90%;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.8);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.8);
         }
         .auth-modal .modal-box h2 {
             color: #ffb347;
@@ -397,25 +407,62 @@
             margin-top: 6px;
         }
 
-        /* --- Новый дизайн панели рисования (темная тема) --- */
+        /* ================================================================
+           НОВЫЙ СОВРЕМЕННЫЙ ДИЗАЙН ПАНЕЛИ ИНСТРУМЕНТОВ
+           ================================================================ */
         .leaflet-draw-toolbar {
-            background: #141c2b !important;
-            border: 1px solid #2a3a5a !important;
-            border-radius: 6px !important;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.6) !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+            padding: 6px !important;
         }
+
         .leaflet-draw-toolbar a {
-            background: #1e2a3e !important;
-            color: #c0d0ee !important;
-            border-bottom: 1px solid #2a3a5a !important;
-            width: 30px !important;
-            height: 30px !important;
-            line-height: 30px !important;
-            text-align: center;
-            font-size: 14px;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 14px !important;
+            background: rgba(20, 28, 43, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(42, 58, 90, 0.6) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            color: #aabbdd !important;
+            font-size: 22px !important;
+            line-height: 1 !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            text-decoration: none !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            background-image: none !important;
+            position: relative !important;
         }
-        .leaflet-draw-toolbar a:hover {
-            background: #2a3a5a !important;
+        .leaflet-draw-toolbar a,
+        .leaflet-draw-toolbar a:hover,
+        .leaflet-draw-toolbar a:focus,
+        .leaflet-draw-toolbar a:active,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-polygon,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-circle,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-marker,
+        .leaflet-draw-toolbar a.leaflet-draw-edit-edit,
+        .leaflet-draw-toolbar a.leaflet-draw-edit-remove {
+            background-image: none !important;
+        }
+
+        .leaflet-draw-toolbar a::before {
+            font-size: 24px !important;
+            line-height: 1 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 100% !important;
+            height: 100% !important;
         }
         .leaflet-draw-toolbar a.leaflet-draw-draw-polygon::before {
             content: "⬡";
@@ -435,50 +482,248 @@
         .leaflet-draw-toolbar a.leaflet-draw-edit-remove::before {
             content: "✕";
         }
-        .leaflet-draw-toolbar a.leaflet-draw-draw-polygon,
-        .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle,
-        .leaflet-draw-toolbar a.leaflet-draw-draw-circle,
-        .leaflet-draw-toolbar a.leaflet-draw-draw-marker,
-        .leaflet-draw-toolbar a.leaflet-draw-edit-edit,
-        .leaflet-draw-toolbar a.leaflet-draw-edit-remove {
-            background-image: none !important;
-        }
-        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub {
-            background: #141c2b !important;
-            border: 1px solid #2a3a5a !important;
-        }
-        .leaflet-draw-toolbar .leaflet-draw-actions a {
-            background: #1e2a3e !important;
-            color: #c0d0ee !important;
-            border: 1px solid #2a3a5a !important;
-        }
-        .leaflet-draw-toolbar .leaflet-draw-actions a:hover {
-            background: #2a3a5a !important;
-        }
-        .leaflet-draw-toolbar .leaflet-draw-actions .leaflet-draw-actions-bottom {
-            border-top: 1px solid #2a3a5a !important;
+
+        .leaflet-draw-toolbar a:hover {
+            background: rgba(42, 58, 90, 0.9) !important;
+            border-color: rgba(90, 122, 170, 0.8) !important;
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
         }
 
+        .leaflet-draw-toolbar a.leaflet-draw-toolbar-button-enabled {
+            background: rgba(255, 179, 71, 0.25) !important;
+            border-color: #ffb347 !important;
+            box-shadow: 0 0 25px rgba(255, 179, 71, 0.2), inset 0 0 25px rgba(255, 179, 71, 0.05) !important;
+            color: #ffb347 !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub {
+            background: transparent !important;
+            border: none !important;
+            border-radius: 0 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            box-shadow: none !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 6px !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a {
+            width: 48px !important;
+            height: 48px !important;
+            border-radius: 14px !important;
+            background: rgba(20, 28, 43, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(42, 58, 90, 0.6) !important;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.05) !important;
+            color: #aabbdd !important;
+            font-size: 22px !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            background-image: none !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a:hover {
+            background: rgba(42, 58, 90, 0.9) !important;
+            border-color: rgba(90, 122, 170, 0.8) !important;
+            transform: translateY(-3px) scale(1.06);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+            color: #ffffff !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a.leaflet-draw-toolbar-button-enabled {
+            background: rgba(255, 179, 71, 0.25) !important;
+            border-color: #ffb347 !important;
+            box-shadow: 0 0 25px rgba(255, 179, 71, 0.2), inset 0 0 25px rgba(255, 179, 71, 0.05) !important;
+            color: #ffb347 !important;
+        }
+
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions {
+            background: transparent !important;
+            border: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 4px !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a {
+            width: 48px !important;
+            height: 36px !important;
+            border-radius: 10px !important;
+            background: rgba(20, 28, 43, 0.85) !important;
+            backdrop-filter: blur(8px) !important;
+            border: 1px solid rgba(42, 58, 90, 0.6) !important;
+            color: #aabbdd !important;
+            font-size: 15px !important;
+            font-weight: 600 !important;
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1) !important;
+            background-image: none !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 0 !important;
+            line-height: 1 !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a:hover {
+            background: rgba(42, 58, 90, 0.9) !important;
+            border-color: rgba(90, 122, 170, 0.8) !important;
+            color: #ffffff !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions .leaflet-draw-actions-bottom {
+            border-top: none !important;
+            margin-top: 0 !important;
+            padding-top: 0 !important;
+        }
+
+        /* Скрываем стандартные подписи */
+        .leaflet-draw-toolbar .leaflet-draw-draw-polygon span,
+        .leaflet-draw-toolbar .leaflet-draw-draw-rectangle span,
+        .leaflet-draw-toolbar .leaflet-draw-draw-circle span,
+        .leaflet-draw-toolbar .leaflet-draw-draw-marker span,
+        .leaflet-draw-toolbar .leaflet-draw-edit-edit span,
+        .leaflet-draw-toolbar .leaflet-draw-edit-remove span {
+            display: none !important;
+        }
+
+        /* Тултипы */
+        .leaflet-draw-toolbar a::after {
+            content: attr(data-title);
+            position: absolute;
+            left: 58px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(20, 28, 43, 0.95);
+            backdrop-filter: blur(8px);
+            color: #e0e8f0;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 6px 14px;
+            border-radius: 8px;
+            border: 1px solid rgba(42, 58, 90, 0.6);
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease, transform 0.2s ease;
+            transform: translateY(-50%) scale(0.95);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
+            letter-spacing: 0.3px;
+            z-index: 999;
+        }
+        .leaflet-draw-toolbar a:hover::after {
+            opacity: 1;
+            transform: translateY(-50%) scale(1);
+        }
+
+        /* Адаптив */
         @media (max-width: 820px) {
-            .topbar .brand { font-size: 0.8rem; }
-            .topbar .sep { display: none; }
-            .topbar label { font-size: 0.6rem; }
-            .topbar .btn { font-size: 0.55rem; padding: 2px 6px; }
-            .risk-select { font-size: 0.6rem; min-width: 50px; }
-            .risk-label { font-size: 0.5rem; }
-            .layer-toggle-btn .label-text { display: none; }
-            .layer-toggle-btn .badge { display: none; }
-            .layer-toggle-btn { padding: 1px 4px; }
-            .day-btn { font-size: 0.5rem; padding: 1px 5px; }
+            .topbar .brand {
+                font-size: 0.8rem;
+            }
+            .topbar .sep {
+                display: none;
+            }
+            .topbar label {
+                font-size: 0.6rem;
+            }
+            .topbar .btn {
+                font-size: 0.55rem;
+                padding: 2px 6px;
+            }
+            .risk-select {
+                font-size: 0.6rem;
+                min-width: 50px;
+            }
+            .risk-label {
+                font-size: 0.5rem;
+            }
+            .layer-toggle-btn .label-text {
+                display: none;
+            }
+            .layer-toggle-btn .badge {
+                display: none;
+            }
+            .layer-toggle-btn {
+                padding: 1px 4px;
+            }
+            .day-btn {
+                font-size: 0.5rem;
+                padding: 1px 5px;
+            }
+            .leaflet-draw-toolbar a {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 18px !important;
+                border-radius: 12px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a {
+                width: 40px !important;
+                height: 40px !important;
+                font-size: 18px !important;
+                border-radius: 12px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a {
+                width: 40px !important;
+                height: 32px !important;
+                font-size: 13px !important;
+                border-radius: 8px !important;
+            }
+            .leaflet-draw-toolbar a::after {
+                display: none !important;
+            }
         }
         @media (max-width: 600px) {
-            .topbar { gap: 2px 4px; padding: 3px 6px; }
-            .topbar .brand { font-size: 0.7rem; margin-right: 2px; }
-            .topbar .brand small { font-size: 0.5rem; }
-            .topbar .btn { font-size: 0.5rem; padding: 1px 5px; }
-            .layer-toggle-btn .dot { width: 8px; height: 8px; }
-            .layer-toggle-btn { height: 18px; font-size: 0.5rem; }
-            .day-btn { height: 18px; font-size: 0.5rem; }
+            .topbar {
+                gap: 2px 4px;
+                padding: 3px 6px;
+            }
+            .topbar .brand {
+                font-size: 0.7rem;
+                margin-right: 2px;
+            }
+            .topbar .brand small {
+                font-size: 0.5rem;
+            }
+            .topbar .btn {
+                font-size: 0.5rem;
+                padding: 1px 5px;
+            }
+            .layer-toggle-btn .dot {
+                width: 8px;
+                height: 8px;
+            }
+            .layer-toggle-btn {
+                height: 18px;
+                font-size: 0.5rem;
+            }
+            .day-btn {
+                height: 18px;
+                font-size: 0.5rem;
+            }
+            .leaflet-draw-toolbar a {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 16px !important;
+                border-radius: 10px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub a {
+                width: 36px !important;
+                height: 36px !important;
+                font-size: 16px !important;
+                border-radius: 10px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub .leaflet-draw-actions a {
+                width: 36px !important;
+                height: 28px !important;
+                font-size: 12px !important;
+                border-radius: 6px !important;
+            }
+            .leaflet-draw-toolbar {
+                gap: 4px !important;
+                padding: 4px !important;
+            }
+            .leaflet-draw-toolbar .leaflet-draw-toolbar-sub {
+                gap: 4px !important;
+            }
         }
     </style>
 </head>
@@ -705,9 +950,10 @@
         // ================================================================
         //  2. СОСТОЯНИЕ
         // ================================================================
-        const PASSWORD = 'csf2026'; // пароль для редактирования
+        const PASSWORD = 'csf2026'; // пароль известен только синоптикам, НЕ ВЫВОДИТСЯ
         let isAuthorized = false;
         let currentDay = 1;
+        let drawControl = null;
 
         let store = {
             day1: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
@@ -735,8 +981,9 @@
             if (diff > oneDay) {
                 store.day1 = JSON.parse(JSON.stringify(store.day2));
                 store.day2 = JSON.parse(JSON.stringify(store.day3));
-                store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: store
-                        .day1.synoptic || 'CSF' };
+                store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                    synoptic: store
+                    .day1.synoptic || 'CSF' };
                 store.lastDayShift = now;
                 saveToLocalStorage();
                 showToast('🔄 Дни сдвинуты: наступил новый день');
@@ -1193,39 +1440,73 @@
                 enableEditing(false);
             }
             updateDayTitle();
+
+            // Устанавливаем подписи для тултипов (после рендера)
+            setTimeout(setTooltips, 200);
+        }
+
+        function setTooltips() {
+            document.querySelectorAll('.leaflet-draw-toolbar a').forEach(el => {
+                const cls = el.className;
+                let title = '';
+                if (cls.includes('polygon')) title = 'Полигон';
+                else if (cls.includes('rectangle')) title = 'Прямоугольник';
+                else if (cls.includes('circle')) title = 'Круг';
+                else if (cls.includes('marker')) title = 'Метка';
+                else if (cls.includes('edit-edit')) title = 'Редактировать';
+                else if (cls.includes('edit-remove')) title = 'Удалить';
+                if (title) el.setAttribute('data-title', title);
+            });
         }
 
         // ================================================================
-        //  9. КОНТРОЛ РИСОВАНИЯ (появляется/исчезает при входе/выходе)
+        //  9. КОНТРОЛ РИСОВАНИЯ (современный, с улучшенным дизайном)
         // ================================================================
-        let drawControl = null;
-
-        function createDrawControl() {
-            if (drawControl) return drawControl;
-            drawControl = new L.Control.Draw({
+        function buildDrawControl() {
+            const drawColorInput = document.getElementById('drawColor');
+            const ctrl = new L.Control.Draw({
                 position: 'topleft',
                 draw: {
                     polygon: {
                         allowIntersection: false,
                         showArea: true,
-                        shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                        shapeOptions: {
+                            color: drawColorInput.value,
+                            weight: 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25
+                        }
                     },
                     rectangle: {
-                        shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                        shapeOptions: {
+                            color: drawColorInput.value,
+                            weight: 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25
+                        }
                     },
                     circle: {
-                        shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                        shapeOptions: {
+                            color: drawColorInput.value,
+                            weight: 2,
+                            opacity: 0.9,
+                            fillOpacity: 0.25
+                        }
                     },
                     marker: true,
                     polyline: false,
                     circlemarker: false,
                 },
-                edit: { featureGroup: drawnItems, remove: true }
+                edit: {
+                    featureGroup: drawnItems,
+                    remove: true
+                }
             });
-            return drawControl;
+            return ctrl;
         }
 
         function enableEditing(enabled) {
+            // Блокируем/разблокируем кнопки
             const tools = [
                 document.getElementById('drawTool'),
                 document.getElementById('drawColor'),
@@ -1245,21 +1526,34 @@
                 }
             });
 
-            // Управление контролом рисования
-            const ctrl = createDrawControl();
             if (enabled) {
-                if (!map.hasControl(ctrl)) {
-                    map.addControl(ctrl);
+                // Удаляем старый контрол, если есть
+                if (drawControl) {
+                    map.removeControl(drawControl);
+                    drawControl = null;
                 }
+                drawControl = buildDrawControl();
+                map.addControl(drawControl);
+                // Обновляем цвет
+                const color = document.getElementById('drawColor').value;
+                if (drawControl._toolbars && drawControl._toolbars.draw) {
+                    const modes = drawControl._toolbars.draw._modes;
+                    if (modes.polygon) modes.polygon.handler.options.shapeOptions.color = color;
+                    if (modes.rectangle) modes.rectangle.handler.options.shapeOptions.color = color;
+                    if (modes.circle) modes.circle.handler.options.shapeOptions.color = color;
+                }
+                setTimeout(setTooltips, 100);
+                map.invalidateSize();
             } else {
-                if (map.hasControl(ctrl)) {
-                    map.removeControl(ctrl);
+                if (drawControl) {
+                    map.removeControl(drawControl);
+                    drawControl = null;
                 }
             }
         }
 
         // ================================================================
-        //  10. СИСТЕМА ВХОДА
+        //  10. СИСТЕМА ВХОДА (пароль строго скрыт)
         // ================================================================
         document.getElementById('authBtn').addEventListener('click', function() {
             if (isAuthorized) {
@@ -1282,8 +1576,8 @@
         });
 
         document.getElementById('authSubmit').addEventListener('click', function() {
-            const pass = document.getElementById('authPassword').value;
-            if (pass === PASSWORD) {
+            const pass = document.getElementById('authPassword').value.trim();
+            if (pass.toLowerCase() === PASSWORD.toLowerCase()) {
                 isAuthorized = true;
                 localStorage.setItem('csf_auth', 'true');
                 document.getElementById('authBtn').textContent = '🔓 Выйти';
@@ -1299,6 +1593,9 @@
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.getElementById('authModal').classList.remove('show');
+            }
+            if (e.key === 'Enter' && document.getElementById('authModal').classList.contains('show')) {
+                document.getElementById('authSubmit').click();
             }
         });
 
@@ -1425,8 +1722,6 @@
                     applyBtn.addEventListener('click', function() {
                         const target = sel.value;
                         const feature = layer.toGeoJSON();
-                        let style = { color: color, weight: 2, opacity: 0.9, fillOpacity: 0.25,
-                            _origColor: color };
                         let label = '';
                         const torColors = {
                             '2%': '#4caf50',
@@ -1783,8 +2078,9 @@
         // ================================================================
         init();
 
+        // Пароль НЕ ВЫВОДИТСЯ в консоль — безопасность.
         console.log('✅ CSF | SPC Russia — карта загружена');
-        console.log('🔐 Редактирование доступно только после входа (пароль: csf2026)');
+        console.log('🔐 Редактирование доступно только после входа (пароль скрыт)');
         console.log('🛠️ Инструменты рисования появляются при входе и исчезают при выходе');
         console.log('📅 Три дня прогноза с автоматическим сдвигом');
     </script>
