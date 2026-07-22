@@ -397,6 +397,68 @@
             margin-top: 6px;
         }
 
+        /* --- Новый дизайн панели рисования (темная тема) --- */
+        .leaflet-draw-toolbar {
+            background: #141c2b !important;
+            border: 1px solid #2a3a5a !important;
+            border-radius: 6px !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.6) !important;
+        }
+        .leaflet-draw-toolbar a {
+            background: #1e2a3e !important;
+            color: #c0d0ee !important;
+            border-bottom: 1px solid #2a3a5a !important;
+            width: 30px !important;
+            height: 30px !important;
+            line-height: 30px !important;
+            text-align: center;
+            font-size: 14px;
+        }
+        .leaflet-draw-toolbar a:hover {
+            background: #2a3a5a !important;
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-polygon::before {
+            content: "⬡";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle::before {
+            content: "▭";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-circle::before {
+            content: "◯";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-marker::before {
+            content: "📍";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-edit-edit::before {
+            content: "✎";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-edit-remove::before {
+            content: "✕";
+        }
+        .leaflet-draw-toolbar a.leaflet-draw-draw-polygon,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-rectangle,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-circle,
+        .leaflet-draw-toolbar a.leaflet-draw-draw-marker,
+        .leaflet-draw-toolbar a.leaflet-draw-edit-edit,
+        .leaflet-draw-toolbar a.leaflet-draw-edit-remove {
+            background-image: none !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-toolbar-sub {
+            background: #141c2b !important;
+            border: 1px solid #2a3a5a !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-actions a {
+            background: #1e2a3e !important;
+            color: #c0d0ee !important;
+            border: 1px solid #2a3a5a !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-actions a:hover {
+            background: #2a3a5a !important;
+        }
+        .leaflet-draw-toolbar .leaflet-draw-actions .leaflet-draw-actions-bottom {
+            border-top: 1px solid #2a3a5a !important;
+        }
+
         @media (max-width: 820px) {
             .topbar .brand { font-size: 0.8rem; }
             .topbar .sep { display: none; }
@@ -645,25 +707,21 @@
         // ================================================================
         const PASSWORD = 'csf2026'; // пароль для редактирования
         let isAuthorized = false;
-        let currentDay = 1; // 1,2,3
+        let currentDay = 1;
 
-        // Данные для трёх дней
         let store = {
             day1: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
             day2: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
             day3: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
-            lastDayShift: Date.now() // временная метка последнего сдвига
+            lastDayShift: Date.now()
         };
 
-        // Текущие слои на карте (для отображения)
         const riskLayers = {
             categorical: L.featureGroup().addTo(map),
             tornado: L.featureGroup().addTo(map),
             wind: L.featureGroup().addTo(map),
             warnings: L.featureGroup().addTo(map),
         };
-
-        // Вспомогательная группа для временных фигур (drawnItems)
         const drawnItems = L.featureGroup().addTo(map);
 
         // ================================================================
@@ -675,33 +733,27 @@
             const diff = now - last;
             const oneDay = 24 * 60 * 60 * 1000;
             if (diff > oneDay) {
-                // Сдвигаем: day1 = day2, day2 = day3, day3 пустой
                 store.day1 = JSON.parse(JSON.stringify(store.day2));
                 store.day2 = JSON.parse(JSON.stringify(store.day3));
                 store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: store
                         .day1.synoptic || 'CSF' };
                 store.lastDayShift = now;
-                // Сохраняем в localStorage
                 saveToLocalStorage();
                 showToast('🔄 Дни сдвинуты: наступил новый день');
             }
         }
 
-        // Получить данные текущего дня
         function getCurrentDayData() {
             const key = 'day' + currentDay;
             return store[key];
         }
 
-        // Загрузить данные дня на карту
         function loadDay(dayNumber) {
             currentDay = dayNumber;
             const dayData = getCurrentDayData();
-            // Очистить все слои
             Object.values(riskLayers).forEach(g => g.clearLayers());
             drawnItems.clearLayers();
 
-            // Загрузить фичи
             if (dayData.features) {
                 dayData.features.forEach(f => {
                     if (!f.geometry) return;
@@ -766,7 +818,6 @@
                 });
             }
 
-            // Восстановить состояние слоёв
             const layersState = dayData.layers || { categorical: true, tornado: true, wind: true, warnings: true };
             layerToggleBtns.forEach(btn => {
                 const key = btn.dataset.layer;
@@ -775,17 +826,13 @@
             });
             updateLayerVisibility();
 
-            // Имя синоптика
             if (dayData.synoptic) {
                 document.getElementById('synopticName').value = dayData.synoptic;
             }
 
-            // Обновить активную кнопку дня
             document.querySelectorAll('.day-btn').forEach(b => {
                 b.classList.toggle('active', parseInt(b.dataset.day) === dayNumber);
             });
-
-            // Обновить заголовок
             updateDayTitle();
         }
 
@@ -873,7 +920,6 @@
                     if (map.hasLayer(group)) map.removeLayer(group);
                 }
             });
-            // Сохраняем состояние в текущий день
             const dayData = getCurrentDayData();
             const layersState = {};
             layerToggleBtns.forEach(btn => {
@@ -902,17 +948,14 @@
             btn.addEventListener('click', function() {
                 const day = parseInt(this.dataset.day);
                 if (day !== currentDay) {
-                    // Сохраняем текущий день перед переключением
                     saveCurrentDayData();
                     loadDay(day);
                 }
             });
         });
 
-        // Сохранить текущие данные дня в store
         function saveCurrentDayData() {
             const dayData = getCurrentDayData();
-            // Собираем все фичи с карты
             const features = getAllFeatures();
             dayData.features = features;
             dayData.layers = {};
@@ -924,7 +967,7 @@
         }
 
         // ================================================================
-        //  7. РАБОТА С ДАННЫМИ (экспорт/импорт, localStorage, URL)
+        //  7. РАБОТА С ДАННЫМИ
         // ================================================================
         function getAllFeatures() {
             const fc = [];
@@ -980,7 +1023,6 @@
         }
 
         function loadFeaturesFromData(features, layersState, synoptic) {
-            // Очищаем слои
             Object.values(riskLayers).forEach(g => g.clearLayers());
             drawnItems.clearLayers();
 
@@ -1046,7 +1088,6 @@
                 }
             });
 
-            // Восстанавливаем состояние слоёв
             if (layersState) {
                 layerToggleBtns.forEach(btn => {
                     const key = btn.dataset.layer;
@@ -1063,7 +1104,6 @@
             }
         }
 
-        // Сохранить в localStorage
         function saveToLocalStorage() {
             try {
                 const data = {
@@ -1073,12 +1113,9 @@
                     lastDayShift: store.lastDayShift
                 };
                 localStorage.setItem('csf_forecast', JSON.stringify(data));
-            } catch (e) {
-                console.warn('Не удалось сохранить в localStorage:', e);
-            }
+            } catch (e) { console.warn('Не удалось сохранить в localStorage:', e); }
         }
 
-        // Загрузить из localStorage
         function loadFromLocalStorage() {
             try {
                 const raw = localStorage.getItem('csf_forecast');
@@ -1092,13 +1129,9 @@
                     return true;
                 }
                 return false;
-            } catch (e) {
-                console.warn('Ошибка загрузки из localStorage:', e);
-                return false;
-            }
+            } catch (e) { return false; }
         }
 
-        // Кодировать все данные в URL
         function encodeAllDataToURL() {
             const data = {
                 day1: store.day1,
@@ -1117,34 +1150,26 @@
             try {
                 const json = decodeURIComponent(atob(encoded));
                 return JSON.parse(json);
-            } catch (e) {
-                console.warn('Ошибка декодирования данных из URL:', e);
-                return null;
-            }
+            } catch (e) { return null; }
         }
 
         // ================================================================
-        //  8. ИНИЦИАЛИЗАЦИЯ (загрузка при старте)
+        //  8. ИНИЦИАЛИЗАЦИЯ
         // ================================================================
         function init() {
-            // Проверить сдвиг дней
             shiftDaysIfNeeded();
 
-            // Попробовать загрузить из URL
             const urlData = decodeDataFromURL();
             if (urlData) {
                 store.day1 = urlData.day1 || store.day1;
                 store.day2 = urlData.day2 || store.day2;
                 store.day3 = urlData.day3 || store.day3;
                 store.lastDayShift = urlData.lastDayShift || Date.now();
-                // Сохранить в localStorage
                 saveToLocalStorage();
                 showToast('📥 Загружено из URL');
             } else {
-                // Загрузить из localStorage
                 const loaded = loadFromLocalStorage();
                 if (!loaded) {
-                    // Пустые данные, создаём дефолтные
                     store.day1 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
                         synoptic: 'CSF' };
                     store.day2 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
@@ -1156,10 +1181,8 @@
                 }
             }
 
-            // Загрузить день 1
             loadDay(1);
 
-            // Проверить авторизацию (из localStorage)
             const auth = localStorage.getItem('csf_auth');
             if (auth === 'true') {
                 isAuthorized = true;
@@ -1169,14 +1192,39 @@
             } else {
                 enableEditing(false);
             }
-
-            // Обновить заголовок
             updateDayTitle();
         }
 
         // ================================================================
-        //  9. СИСТЕМА ВХОДА
+        //  9. КОНТРОЛ РИСОВАНИЯ (появляется/исчезает при входе/выходе)
         // ================================================================
+        let drawControl = null;
+
+        function createDrawControl() {
+            if (drawControl) return drawControl;
+            drawControl = new L.Control.Draw({
+                position: 'topleft',
+                draw: {
+                    polygon: {
+                        allowIntersection: false,
+                        showArea: true,
+                        shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                    },
+                    rectangle: {
+                        shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                    },
+                    circle: {
+                        shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
+                    },
+                    marker: true,
+                    polyline: false,
+                    circlemarker: false,
+                },
+                edit: { featureGroup: drawnItems, remove: true }
+            });
+            return drawControl;
+        }
+
         function enableEditing(enabled) {
             const tools = [
                 document.getElementById('drawTool'),
@@ -1189,10 +1237,6 @@
                 document.getElementById('exportGeoJSON'),
                 document.getElementById('importGeoJSON')
             ];
-            const drawControlContainer = document.querySelector('.leaflet-draw');
-            if (drawControlContainer) {
-                drawControlContainer.style.display = enabled ? 'block' : 'none';
-            }
             tools.forEach(el => {
                 if (el) {
                     el.disabled = !enabled;
@@ -1200,19 +1244,25 @@
                     el.style.pointerEvents = enabled ? 'auto' : 'none';
                 }
             });
-            // Также блокируем кнопки слоёв (они уже проверяют isAuthorized)
-            // Но для единообразия скрываем возможность редактирования
-            if (!enabled) {
-                // Запрещаем рисование
-                if (drawControl) {
-                    // Нельзя удалить контрол, просто блокируем
+
+            // Управление контролом рисования
+            const ctrl = createDrawControl();
+            if (enabled) {
+                if (!map.hasControl(ctrl)) {
+                    map.addControl(ctrl);
+                }
+            } else {
+                if (map.hasControl(ctrl)) {
+                    map.removeControl(ctrl);
                 }
             }
         }
 
+        // ================================================================
+        //  10. СИСТЕМА ВХОДА
+        // ================================================================
         document.getElementById('authBtn').addEventListener('click', function() {
             if (isAuthorized) {
-                // Выход
                 isAuthorized = false;
                 localStorage.removeItem('csf_auth');
                 this.textContent = '🔒 Войти';
@@ -1220,7 +1270,6 @@
                 enableEditing(false);
                 showToast('🔒 Вы вышли из режима редактирования');
             } else {
-                // Показать модалку
                 document.getElementById('authModal').classList.add('show');
                 document.getElementById('authPassword').value = '';
                 document.getElementById('authError').textContent = '';
@@ -1247,7 +1296,6 @@
             }
         });
 
-        // Закрытие модалки по Escape
         document.addEventListener('keydown', function(e) {
             if (e.key === 'Escape') {
                 document.getElementById('authModal').classList.remove('show');
@@ -1255,13 +1303,11 @@
         });
 
         // ================================================================
-        //  10. УПРАВЛЕНИЕ URL (без автоматического обновления)
+        //  11. УПРАВЛЕНИЕ URL И СОХРАНЕНИЕ
         // ================================================================
-        // Кнопка "Сохранить" – обновляет URL и localStorage
         document.getElementById('saveBtn').addEventListener('click', function() {
             if (!isAuthorized) { showToast('⚠️ Войдите для сохранения'); return; }
             saveCurrentDayData();
-            // Обновляем URL с данными
             const encoded = encodeAllDataToURL();
             const url = new URL(window.location);
             url.searchParams.set('data', encoded);
@@ -1269,7 +1315,6 @@
             showToast('💾 Прогноз сохранён в URL и локальное хранилище');
         });
 
-        // Кнопка "Скопировать ссылку" – генерирует ссылку с данными
         document.getElementById('shareBtn').addEventListener('click', function() {
             saveCurrentDayData();
             const encoded = encodeAllDataToURL();
@@ -1277,56 +1322,20 @@
             url.searchParams.set('data', encoded);
             const shareUrl = url.toString();
             navigator.clipboard.writeText(shareUrl).then(() => {
-                showToast('📋 Ссылка скопирована! Отправьте её на другие устройства.');
+                showToast('📋 Ссылка скопирована!');
             }).catch(() => {
                 prompt('Скопируйте ссылку вручную:', shareUrl);
             });
         });
 
         // ================================================================
-        //  11. ИНСТРУМЕНТЫ РИСОВАНИЯ (с проверкой авторизации)
+        //  12. ОБРАБОТЧИК РИСОВАНИЯ
         // ================================================================
-        const drawControl = new L.Control.Draw({
-            position: 'topleft',
-            draw: {
-                polygon: {
-                    allowIntersection: false,
-                    showArea: true,
-                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
-                },
-                rectangle: {
-                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
-                },
-                circle: {
-                    shapeOptions: { color: drawColor.value, weight: 2, opacity: 0.8, fillOpacity: 0.3 }
-                },
-                marker: true,
-                polyline: false,
-                circlemarker: false,
-            },
-            edit: { featureGroup: drawnItems, remove: true }
-        });
-        map.addControl(drawControl);
-
-        // Блокируем рисование, если не авторизован
-        function updateDrawControlVisibility() {
-            const container = document.querySelector('.leaflet-draw');
-            if (container) {
-                container.style.display = isAuthorized ? 'block' : 'none';
-            }
-        }
-        // Начальная видимость
-        setTimeout(updateDrawControlVisibility, 100);
-
-        // Обработчик создания фигур
         map.on(L.Draw.Event.CREATED, function(e) {
             if (!isAuthorized) {
                 showToast('⚠️ Войдите для добавления фигур');
-                // Удалить созданную фигуру
                 const layer = e.layer;
-                if (layer) {
-                    drawnItems.removeLayer(layer);
-                }
+                if (layer) drawnItems.removeLayer(layer);
                 return;
             }
             const layer = e.layer;
@@ -1520,7 +1529,6 @@
                         riskLayers[target].addLayer(newLayer);
                         drawnItems.removeLayer(layer);
                         map.closePopup();
-                        // Сохраняем изменения
                         saveCurrentDayData();
                         showToast('✅ Полигон добавлен');
                     });
@@ -1538,7 +1546,7 @@
         });
 
         // ================================================================
-        //  12. ДРУГИЕ КНОПКИ
+        //  13. ДРУГИЕ КНОПКИ
         // ================================================================
         document.getElementById('smoothBtn').addEventListener('click', function() {
             if (!isAuthorized) { showToast('⚠️ Войдите для редактирования'); return; }
@@ -1614,7 +1622,7 @@
         });
 
         // ================================================================
-        //  13. ЭКСПОРТ / ИМПОРТ
+        //  14. ЭКСПОРТ / ИМПОРТ
         // ================================================================
         document.getElementById('exportGeoJSON').addEventListener('click', function() {
             if (!isAuthorized) { showToast('⚠️ Войдите для экспорта'); return; }
@@ -1642,12 +1650,8 @@
                 try {
                     const data = JSON.parse(ev.target.result);
                     if (data.type !== 'FeatureCollection') { alert('Неверный формат'); return; }
-                    // Загружаем в текущий день
-                    const dayData = getCurrentDayData();
-                    // Очищаем текущие слои и добавляем новые
                     Object.values(riskLayers).forEach(g => g.clearLayers());
                     drawnItems.clearLayers();
-                    // Загружаем фичи
                     data.features.forEach(f => {
                         if (!f.geometry) return;
                         const props = f.properties || {};
@@ -1718,7 +1722,7 @@
         });
 
         // ================================================================
-        //  14. ЛЕГЕНДА И ТОСТ
+        //  15. ЛЕГЕНДА И ТОСТ
         // ================================================================
         document.getElementById('legendToggle').addEventListener('click', function() {
             document.getElementById('legendPanel').classList.toggle('show');
@@ -1735,12 +1739,13 @@
         }
 
         // ================================================================
-        //  15. СВЯЗКА СЕЛЕКТОРОВ ЦВЕТА
+        //  16. СВЯЗКА СЕЛЕКТОРОВ ЦВЕТА
         // ================================================================
         const convSel = document.getElementById('convectiveSelect');
         const torSel = document.getElementById('tornadoSelect');
         const windSel = document.getElementById('windSelect');
         const warnSel = document.getElementById('warningSelect');
+        const drawColor = document.getElementById('drawColor');
 
         function updateColor() {
             const active = document.activeElement;
@@ -1762,28 +1767,26 @@
         torSel.addEventListener('change', updateColor);
         windSel.addEventListener('change', updateColor);
         warnSel.addEventListener('change', updateColor);
-        const drawColor = document.getElementById('drawColor');
         drawColor.value = convSel.value;
 
         // ================================================================
-        //  16. ИМЯ СИНОПТИКА
+        //  17. ИМЯ СИНОПТИКА
         // ================================================================
-        const synInput = document.getElementById('synopticName');
-        synInput.addEventListener('change', function() {
+        document.getElementById('synopticName').addEventListener('change', function() {
             if (isAuthorized) {
                 saveCurrentDayData();
             }
         });
 
         // ================================================================
-        //  17. ЗАПУСК
+        //  18. ЗАПУСК
         // ================================================================
         init();
 
         console.log('✅ CSF | SPC Russia — карта загружена');
         console.log('🔐 Редактирование доступно только после входа (пароль: csf2026)');
+        console.log('🛠️ Инструменты рисования появляются при входе и исчезают при выходе');
         console.log('📅 Три дня прогноза с автоматическим сдвигом');
-        console.log('🔗 URL не обновляется автоматически — используйте "Сохранить" или "Скопировать ссылку"');
     </script>
 </body>
 </html>
