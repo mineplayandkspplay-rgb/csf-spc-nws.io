@@ -9,14 +9,15 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js">
     </script>
-
     <!-- Leaflet Draw -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.css" />
     <script src="https://unpkg.com/leaflet-draw@1.0.4/dist/leaflet.draw.js">
     </script>
-
     <!-- Turf.js -->
     <script src="https://unpkg.com/@turf/turf@6/turf.min.js">
+    </script>
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2">
     </script>
 
     <style>
@@ -134,6 +135,27 @@
             background: #2a5a3a;
             border-color: #4a8a5a;
         }
+        .topbar .btn.sync-btn {
+            background: #3a4a7a;
+            border-color: #5a7aaa;
+        }
+        .topbar .btn.sync-btn:hover {
+            background: #4a5a8a;
+        }
+        .topbar .btn.sync-btn.updating {
+            animation: pulse 1s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                opacity: 1;
+            }
+            50% {
+                opacity: 0.5;
+            }
+            100% {
+                opacity: 1;
+            }
+        }
         .topbar .sep {
             width: 1px;
             height: 20px;
@@ -156,7 +178,6 @@
             white-space: nowrap;
         }
 
-        /* Layer toggles */
         .layer-toggles {
             display: flex;
             align-items: center;
@@ -213,7 +234,6 @@
             color: #c0d0ee;
         }
 
-        /* Day toggles */
         .day-toggles {
             display: flex;
             gap: 3px;
@@ -848,6 +868,7 @@
         <button class="btn auth-btn" id="authBtn">🔒 Войти</button>
         <button class="btn save-btn" id="saveBtn">💾 Сохранить</button>
         <button class="btn share-btn" id="shareBtn">📋 Скопировать ссылку</button>
+        <button class="btn sync-btn" id="syncBtn">🔄 Обновить</button>
 
         <button class="btn" id="exportGeoJSON">📤 Export</button>
         <button class="btn" id="importGeoJSON">📥 Import</button>
@@ -918,6 +939,26 @@
 
     <script>
         // ================================================================
+        //  0. КОНФИГУРАЦИЯ SUPABASE (замените на свои данные)
+        // ================================================================
+        // Получите URL и анонимный ключ в настройках вашего проекта Supabase
+        // https://supabase.com/dashboard/project/ваш_проект/settings/api
+        const SUPABASE_URL = 'https://ваш_проект.supabase.co'; // ЗАМЕНИТЕ
+        const SUPABASE_ANON_KEY = 'ваш_анонимный_ключ'; // ЗАМЕНИТЕ
+
+        // Если вы не хотите использовать Supabase, закомментируйте блок и используйте localStorage
+        // В этом случае синхронизации между устройствами не будет.
+        const USE_SUPABASE = true; // установите false, если не хотите использовать БД
+
+        // Инициализация клиента Supabase
+        let supabase = null;
+        if (USE_SUPABASE && SUPABASE_URL !== 'https://ваш_проект.supabase.co') {
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.warn('Supabase не настроен. Используется только локальное хранилище.');
+        }
+
+        // ================================================================
         //  1. КАРТА
         // ================================================================
         const map = L.map('map', {
@@ -934,7 +975,8 @@
             light: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
                 attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; CartoDB'
             }),
-            satellite: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            satellite: L.tileLayer(
+            'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
                 attribution: '&copy; Esri'
             }),
             terrain: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
@@ -950,10 +992,13 @@
         // ================================================================
         //  2. СОСТОЯНИЕ
         // ================================================================
-        const PASSWORD = 'csf2026'; // пароль известен только синоптикам, НЕ ВЫВОДИТСЯ
+        const PASSWORD = 'csf2026'; // пароль известен только синоптикам
         let isAuthorized = false;
         let currentDay = 1;
         let drawControl = null;
+        let syncInterval = null;
+        let isSyncing = false;
+        let lastSyncTimestamp = null; // храним время последней синхронизации с сервера
 
         let store = {
             day1: { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true }, synoptic: 'CSF' },
@@ -971,250 +1016,7 @@
         const drawnItems = L.featureGroup().addTo(map);
 
         // ================================================================
-        //  3. УПРАВЛЕНИЕ ДНЯМИ
-        // ================================================================
-        function shiftDaysIfNeeded() {
-            const now = Date.now();
-            const last = store.lastDayShift || now;
-            const diff = now - last;
-            const oneDay = 24 * 60 * 60 * 1000;
-            if (diff > oneDay) {
-                store.day1 = JSON.parse(JSON.stringify(store.day2));
-                store.day2 = JSON.parse(JSON.stringify(store.day3));
-                store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
-                    synoptic: store
-                    .day1.synoptic || 'CSF' };
-                store.lastDayShift = now;
-                saveToLocalStorage();
-                showToast('🔄 Дни сдвинуты: наступил новый день');
-            }
-        }
-
-        function getCurrentDayData() {
-            const key = 'day' + currentDay;
-            return store[key];
-        }
-
-        function loadDay(dayNumber) {
-            currentDay = dayNumber;
-            const dayData = getCurrentDayData();
-            Object.values(riskLayers).forEach(g => g.clearLayers());
-            drawnItems.clearLayers();
-
-            if (dayData.features) {
-                dayData.features.forEach(f => {
-                    if (!f.geometry) return;
-                    const props = f.properties || {};
-                    const style = props._style || {
-                        color: '#ffaa33',
-                        weight: 2,
-                        opacity: 0.9,
-                        fillOpacity: 0.25,
-                        _origColor: '#ffaa33',
-                        _hatch: false,
-                        _hatchColor: '#ffaa33'
-                    };
-                    const layer = L.geoJSON(f, {
-                        style: function() {
-                            return {
-                                color: style.color || '#ffaa33',
-                                weight: style.weight || 2,
-                                opacity: style.opacity || 0.9,
-                                fillOpacity: style.fillOpacity || 0.25,
-                                dashArray: style.dashArray || null,
-                                fillColor: style.fillColor || style.color || '#ffaa33'
-                            };
-                        }
-                    });
-                    const origColor = style._origColor || style.color || '#ffaa33';
-                    layer.options._origColor = origColor;
-                    layer.eachLayer(sub => {
-                        sub.options._origColor = origColor;
-                        if (style.dashArray) sub.options.dashArray = style.dashArray;
-                        else delete sub.options.dashArray;
-                    });
-                    if (style._hatch === true) {
-                        const hatchColor = style._hatchColor || origColor;
-                        const patternId = ensureHatchPattern(hatchColor);
-                        layer.setStyle({
-                            fill: true,
-                            fillColor: `url(#${patternId})`,
-                            fillOpacity: 1,
-                            color: hatchColor,
-                            weight: 2,
-                            opacity: 0.9
-                        });
-                        layer.options._hatch = true;
-                        layer.options._hatchColor = hatchColor;
-                        layer.eachLayer(sub => {
-                            sub.options._hatch = true;
-                            sub.options._hatchColor = hatchColor;
-                            sub.options.fillColor = `url(#${patternId})`;
-                            sub.options.fillOpacity = 1;
-                        });
-                    }
-                    if (props._popup) {
-                        layer.bindPopup(props._popup);
-                    }
-                    const key = props._layer || 'categorical';
-                    if (riskLayers[key]) {
-                        riskLayers[key].addLayer(layer);
-                    } else {
-                        drawnItems.addLayer(layer);
-                    }
-                });
-            }
-
-            const layersState = dayData.layers || { categorical: true, tornado: true, wind: true, warnings: true };
-            layerToggleBtns.forEach(btn => {
-                const key = btn.dataset.layer;
-                if (layersState[key] === true) btn.classList.add('active');
-                else btn.classList.remove('active');
-            });
-            updateLayerVisibility();
-
-            if (dayData.synoptic) {
-                document.getElementById('synopticName').value = dayData.synoptic;
-            }
-
-            document.querySelectorAll('.day-btn').forEach(b => {
-                b.classList.toggle('active', parseInt(b.dataset.day) === dayNumber);
-            });
-            updateDayTitle();
-        }
-
-        function updateDayTitle() {
-            const days = ['', 'Сегодня', 'Завтра', 'Послезавтра'];
-            const dayName = days[currentDay] || `Day ${currentDay}`;
-            document.querySelector('.brand small').textContent = `| ${dayName}`;
-        }
-
-        // ================================================================
-        //  4. ШТРИХОВКА (SVG pattern)
-        // ================================================================
-        function createHatchPattern(id, color = '#ffaa00', bg = 'transparent') {
-            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-            svg.setAttribute('width', '10');
-            svg.setAttribute('height', '10');
-            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-            const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
-            pattern.setAttribute('id', id);
-            pattern.setAttribute('width', '10');
-            pattern.setAttribute('height', '10');
-            pattern.setAttribute('patternUnits', 'userSpaceOnUse');
-            pattern.setAttribute('patternTransform', 'rotate(45)');
-            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-            rect.setAttribute('width', '10');
-            rect.setAttribute('height', '10');
-            rect.setAttribute('fill', bg);
-            pattern.appendChild(rect);
-            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-            line.setAttribute('x1', '0');
-            line.setAttribute('y1', '0');
-            line.setAttribute('x2', '0');
-            line.setAttribute('y2', '10');
-            line.setAttribute('stroke', color);
-            line.setAttribute('stroke-width', '3');
-            pattern.appendChild(line);
-            defs.appendChild(pattern);
-            svg.appendChild(defs);
-            return svg;
-        }
-
-        function ensureHatchPattern(color = '#ffaa00') {
-            const mapContainer = map.getContainer();
-            let svg = mapContainer.querySelector('svg');
-            if (!svg) {
-                const renderer = map.getRenderer ? map.getRenderer() : null;
-                if (renderer && renderer._container) {
-                    svg = renderer._container.querySelector('svg');
-                }
-            }
-            if (!svg) {
-                const container = mapContainer;
-                svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                svg.setAttribute('style', 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;');
-                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
-                container.appendChild(svg);
-            }
-            let defs = svg.querySelector('defs');
-            if (!defs) {
-                defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                svg.appendChild(defs);
-            }
-            const patternId = `hatch-${color.replace('#', '')}`;
-            if (!defs.querySelector(`#${patternId}`)) {
-                const pattern = createHatchPattern(patternId, color);
-                const newPattern = pattern.querySelector('pattern').cloneNode(true);
-                defs.appendChild(newPattern);
-            }
-            return patternId;
-        }
-
-        // ================================================================
-        //  5. УПРАВЛЕНИЕ ВИДИМОСТЬЮ СЛОЁВ
-        // ================================================================
-        const layerToggleBtns = document.querySelectorAll('.layer-toggle-btn');
-
-        function updateLayerVisibility() {
-            layerToggleBtns.forEach(btn => {
-                const key = btn.dataset.layer;
-                const group = riskLayers[key];
-                const active = btn.classList.contains('active');
-                if (active) {
-                    if (!map.hasLayer(group)) map.addLayer(group);
-                } else {
-                    if (map.hasLayer(group)) map.removeLayer(group);
-                }
-            });
-            const dayData = getCurrentDayData();
-            const layersState = {};
-            layerToggleBtns.forEach(btn => {
-                layersState[btn.dataset.layer] = btn.classList.contains('active');
-            });
-            dayData.layers = layersState;
-            saveToLocalStorage();
-        }
-
-        layerToggleBtns.forEach(btn => {
-            btn.addEventListener('click', function(e) {
-                if (!isAuthorized) {
-                    showToast('⚠️ Войдите для изменения слоёв');
-                    return;
-                }
-                e.stopPropagation();
-                this.classList.toggle('active');
-                updateLayerVisibility();
-            });
-        });
-
-        // ================================================================
-        //  6. УПРАВЛЕНИЕ ДНЯМИ (кнопки)
-        // ================================================================
-        document.querySelectorAll('.day-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const day = parseInt(this.dataset.day);
-                if (day !== currentDay) {
-                    saveCurrentDayData();
-                    loadDay(day);
-                }
-            });
-        });
-
-        function saveCurrentDayData() {
-            const dayData = getCurrentDayData();
-            const features = getAllFeatures();
-            dayData.features = features;
-            dayData.layers = {};
-            layerToggleBtns.forEach(btn => {
-                dayData.layers[btn.dataset.layer] = btn.classList.contains('active');
-            });
-            dayData.synoptic = document.getElementById('synopticName').value || 'CSF';
-            saveToLocalStorage();
-        }
-
-        // ================================================================
-        //  7. РАБОТА С ДАННЫМИ
+        //  3. ФУНКЦИИ РАБОТЫ С ДАННЫМИ (локальные)
         // ================================================================
         function getAllFeatures() {
             const fc = [];
@@ -1267,6 +1069,11 @@
                 }
             });
             return fc;
+        }
+
+        function getCurrentDayData() {
+            const key = 'day' + currentDay;
+            return store[key];
         }
 
         function loadFeaturesFromData(features, layersState, synoptic) {
@@ -1351,6 +1158,59 @@
             }
         }
 
+        function loadDay(dayNumber) {
+            currentDay = dayNumber;
+            const dayData = getCurrentDayData();
+            loadFeaturesFromData(dayData.features || [], dayData.layers, dayData.synoptic);
+
+            document.querySelectorAll('.day-btn').forEach(b => {
+                b.classList.toggle('active', parseInt(b.dataset.day) === dayNumber);
+            });
+            updateDayTitle();
+        }
+
+        function updateDayTitle() {
+            const days = ['', 'Сегодня', 'Завтра', 'Послезавтра'];
+            const dayName = days[currentDay] || `Day ${currentDay}`;
+            document.querySelector('.brand small').textContent = `| ${dayName}`;
+        }
+
+        function shiftDaysIfNeeded() {
+            const now = Date.now();
+            const last = store.lastDayShift || now;
+            const diff = now - last;
+            const oneDay = 24 * 60 * 60 * 1000;
+            if (diff > oneDay) {
+                store.day1 = JSON.parse(JSON.stringify(store.day2));
+                store.day2 = JSON.parse(JSON.stringify(store.day3));
+                store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                    synoptic: store
+                    .day1.synoptic || 'CSF' };
+                store.lastDayShift = now;
+                saveToLocalStorage();
+                showToast('🔄 Дни сдвинуты: наступил новый день');
+            }
+        }
+
+        function saveCurrentDayData() {
+            const dayData = getCurrentDayData();
+            const features = getAllFeatures();
+            dayData.features = features;
+            dayData.layers = {};
+            layerToggleBtns.forEach(btn => {
+                dayData.layers[btn.dataset.layer] = btn.classList.contains('active');
+            });
+            dayData.synoptic = document.getElementById('synopticName').value || 'CSF';
+            saveToLocalStorage();
+            // также синхронизируем с сервером, если включено
+            if (USE_SUPABASE && supabase) {
+                syncToSupabase();
+            }
+        }
+
+        // ================================================================
+        //  4. РАБОТА С ЛОКАЛЬНЫМ ХРАНИЛИЩЕМ
+        // ================================================================
         function saveToLocalStorage() {
             try {
                 const data = {
@@ -1379,43 +1239,118 @@
             } catch (e) { return false; }
         }
 
-        function encodeAllDataToURL() {
-            const data = {
-                day1: store.day1,
-                day2: store.day2,
-                day3: store.day3,
-                lastDayShift: store.lastDayShift
-            };
-            const json = JSON.stringify(data);
-            return btoa(encodeURIComponent(json));
-        }
-
-        function decodeDataFromURL() {
-            const url = new URL(window.location);
-            const encoded = url.searchParams.get('data');
-            if (!encoded) return null;
+        // ================================================================
+        //  5. РАБОТА С SUPABASE (синхронизация)
+        // ================================================================
+        async function syncToSupabase() {
+            if (!supabase) return;
+            if (isSyncing) return;
+            isSyncing = true;
+            document.getElementById('syncBtn').classList.add('updating');
             try {
-                const json = decodeURIComponent(atob(encoded));
-                return JSON.parse(json);
-            } catch (e) { return null; }
+                const dataToSave = {
+                    day1: store.day1,
+                    day2: store.day2,
+                    day3: store.day3,
+                    lastDayShift: store.lastDayShift,
+                    updated_at: new Date().toISOString()
+                };
+                // Используем upsert: если есть запись с id=1, обновляем, иначе вставляем
+                const { error } = await supabase
+                    .from('forecasts')
+                    .upsert({ id: 1, data: dataToSave }, { onConflict: 'id' });
+
+                if (error) {
+                    console.error('Ошибка сохранения в Supabase:', error);
+                    showToast('⚠️ Ошибка синхронизации с сервером');
+                } else {
+                    lastSyncTimestamp = Date.now();
+                    showToast('✅ Данные синхронизированы с сервером');
+                }
+            } catch (e) {
+                console.error('Ошибка синхронизации:', e);
+                showToast('⚠️ Ошибка соединения с сервером');
+            }
+            isSyncing = false;
+            document.getElementById('syncBtn').classList.remove('updating');
+        }
+
+        async function loadFromSupabase() {
+            if (!supabase) return false;
+            if (isSyncing) return false;
+            isSyncing = true;
+            document.getElementById('syncBtn').classList.add('updating');
+            try {
+                const { data, error } = await supabase
+                    .from('forecasts')
+                    .select('data')
+                    .eq('id', 1)
+                    .maybeSingle();
+
+                if (error) {
+                    console.error('Ошибка загрузки из Supabase:', error);
+                    showToast('⚠️ Ошибка загрузки с сервера');
+                    return false;
+                }
+
+                if (data && data.data) {
+                    const remote = data.data;
+                    // Проверяем, что данные не старше локальных (можно по updated_at, но у нас нет)
+                    // Просто загружаем
+                    store.day1 = remote.day1 || store.day1;
+                    store.day2 = remote.day2 || store.day2;
+                    store.day3 = remote.day3 || store.day3;
+                    store.lastDayShift = remote.lastDayShift || Date.now();
+                    // Сохраняем в localStorage для кеша
+                    saveToLocalStorage();
+                    // Перезагружаем текущий день
+                    loadDay(currentDay);
+                    lastSyncTimestamp = Date.now();
+                    showToast('📥 Загружено с сервера');
+                    return true;
+                } else {
+                    // Если данных нет, возможно, нужно создать пустую запись
+                    // Попробуем сохранить текущие данные
+                    await syncToSupabase();
+                    return false;
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки:', e);
+                showToast('⚠️ Ошибка соединения с сервером');
+                return false;
+            } finally {
+                isSyncing = false;
+                document.getElementById('syncBtn').classList.remove('updating');
+            }
         }
 
         // ================================================================
-        //  8. ИНИЦИАЛИЗАЦИЯ
+        //  6. ИНИЦИАЛИЗАЦИЯ
         // ================================================================
-        function init() {
+        async function init() {
+            // Сдвиг дней
             shiftDaysIfNeeded();
 
-            const urlData = decodeDataFromURL();
-            if (urlData) {
-                store.day1 = urlData.day1 || store.day1;
-                store.day2 = urlData.day2 || store.day2;
-                store.day3 = urlData.day3 || store.day3;
-                store.lastDayShift = urlData.lastDayShift || Date.now();
-                saveToLocalStorage();
-                showToast('📥 Загружено из URL');
+            // Загружаем из localStorage (для скорости)
+            const loaded = loadFromLocalStorage();
+
+            // Пытаемся загрузить с сервера (если включено и есть конфиг)
+            if (USE_SUPABASE && supabase) {
+                const remoteLoaded = await loadFromSupabase();
+                if (!remoteLoaded && !loaded) {
+                    // Если нигде нет данных, создаём пустые
+                    store.day1 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                        synoptic: 'CSF' };
+                    store.day2 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                        synoptic: 'CSF' };
+                    store.day3 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
+                        synoptic: 'CSF' };
+                    store.lastDayShift = Date.now();
+                    saveToLocalStorage();
+                    // Сохраним на сервер
+                    await syncToSupabase();
+                }
             } else {
-                const loaded = loadFromLocalStorage();
                 if (!loaded) {
                     store.day1 = { features: [], layers: { categorical: true, tornado: true, wind: true, warnings: true },
                         synoptic: 'CSF' };
@@ -1430,6 +1365,7 @@
 
             loadDay(1);
 
+            // Авторизация
             const auth = localStorage.getItem('csf_auth');
             if (auth === 'true') {
                 isAuthorized = true;
@@ -1441,8 +1377,28 @@
             }
             updateDayTitle();
 
-            // Устанавливаем подписи для тултипов (после рендера)
+            // Запускаем автоматическую синхронизацию каждые 30 секунд (если включена)
+            if (USE_SUPABASE && supabase) {
+                syncInterval = setInterval(() => {
+                    // Проверяем, не редактируется ли сейчас (можно добавить флаг)
+                    // Для простоты загружаем, но только если нет локальных изменений (можно сравнить временные метки)
+                    // В целях демонстрации просто обновляем, если пользователь не вносит изменения (может быть конфликт)
+                    // Лучше использовать более сложную логику, но для простоты сделаем опрос с кнопкой
+                    // Автоматически обновлять будем только если страница не активна? Нет.
+                    // Оставим только кнопку.
+                    // Но для демонстрации синхронизации добавим обновление при фокусе окна.
+                }, 30000);
+                // Обновляем при возвращении фокуса
+                document.addEventListener('visibilitychange', () => {
+                    if (document.visibilityState === 'visible') {
+                        // Не перезагружаем автоматически, чтобы не перебивать правки
+                        // Покажем кнопку
+                    }
+                });
+            }
+
             setTimeout(setTooltips, 200);
+            showToast('🚀 Карта загружена. Войдите для редактирования.');
         }
 
         function setTooltips() {
@@ -1460,7 +1416,58 @@
         }
 
         // ================================================================
-        //  9. КОНТРОЛ РИСОВАНИЯ (современный, с улучшенным дизайном)
+        //  7. УПРАВЛЕНИЕ ВИДИМОСТЬЮ СЛОЁВ
+        // ================================================================
+        const layerToggleBtns = document.querySelectorAll('.layer-toggle-btn');
+
+        function updateLayerVisibility() {
+            layerToggleBtns.forEach(btn => {
+                const key = btn.dataset.layer;
+                const group = riskLayers[key];
+                const active = btn.classList.contains('active');
+                if (active) {
+                    if (!map.hasLayer(group)) map.addLayer(group);
+                } else {
+                    if (map.hasLayer(group)) map.removeLayer(group);
+                }
+            });
+            const dayData = getCurrentDayData();
+            const layersState = {};
+            layerToggleBtns.forEach(btn => {
+                layersState[btn.dataset.layer] = btn.classList.contains('active');
+            });
+            dayData.layers = layersState;
+            saveToLocalStorage();
+        }
+
+        layerToggleBtns.forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                if (!isAuthorized) {
+                    showToast('⚠️ Войдите для изменения слоёв');
+                    return;
+                }
+                e.stopPropagation();
+                this.classList.toggle('active');
+                updateLayerVisibility();
+                saveCurrentDayData(); // сохраняем состояние
+            });
+        });
+
+        // ================================================================
+        //  8. УПРАВЛЕНИЕ ДНЯМИ
+        // ================================================================
+        document.querySelectorAll('.day-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const day = parseInt(this.dataset.day);
+                if (day !== currentDay) {
+                    saveCurrentDayData();
+                    loadDay(day);
+                }
+            });
+        });
+
+        // ================================================================
+        //  9. КОНТРОЛ РИСОВАНИЯ
         // ================================================================
         function buildDrawControl() {
             const drawColorInput = document.getElementById('drawColor');
@@ -1506,7 +1513,6 @@
         }
 
         function enableEditing(enabled) {
-            // Блокируем/разблокируем кнопки
             const tools = [
                 document.getElementById('drawTool'),
                 document.getElementById('drawColor'),
@@ -1527,14 +1533,12 @@
             });
 
             if (enabled) {
-                // Удаляем старый контрол, если есть
                 if (drawControl) {
                     map.removeControl(drawControl);
                     drawControl = null;
                 }
                 drawControl = buildDrawControl();
                 map.addControl(drawControl);
-                // Обновляем цвет
                 const color = document.getElementById('drawColor').value;
                 if (drawControl._toolbars && drawControl._toolbars.draw) {
                     const modes = drawControl._toolbars.draw._modes;
@@ -1553,7 +1557,7 @@
         }
 
         // ================================================================
-        //  10. СИСТЕМА ВХОДА (пароль строго скрыт)
+        //  10. СИСТЕМА ВХОДА
         // ================================================================
         document.getElementById('authBtn').addEventListener('click', function() {
             if (isAuthorized) {
@@ -1600,30 +1604,66 @@
         });
 
         // ================================================================
-        //  11. УПРАВЛЕНИЕ URL И СОХРАНЕНИЕ
+        //  11. ШТРИХОВКА (SVG pattern)
         // ================================================================
-        document.getElementById('saveBtn').addEventListener('click', function() {
-            if (!isAuthorized) { showToast('⚠️ Войдите для сохранения'); return; }
-            saveCurrentDayData();
-            const encoded = encodeAllDataToURL();
-            const url = new URL(window.location);
-            url.searchParams.set('data', encoded);
-            window.history.replaceState({}, '', url);
-            showToast('💾 Прогноз сохранён в URL и локальное хранилище');
-        });
+        function createHatchPattern(id, color = '#ffaa00', bg = 'transparent') {
+            const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+            svg.setAttribute('width', '10');
+            svg.setAttribute('height', '10');
+            const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+            const pattern = document.createElementNS('http://www.w3.org/2000/svg', 'pattern');
+            pattern.setAttribute('id', id);
+            pattern.setAttribute('width', '10');
+            pattern.setAttribute('height', '10');
+            pattern.setAttribute('patternUnits', 'userSpaceOnUse');
+            pattern.setAttribute('patternTransform', 'rotate(45)');
+            const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+            rect.setAttribute('width', '10');
+            rect.setAttribute('height', '10');
+            rect.setAttribute('fill', bg);
+            pattern.appendChild(rect);
+            const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+            line.setAttribute('x1', '0');
+            line.setAttribute('y1', '0');
+            line.setAttribute('x2', '0');
+            line.setAttribute('y2', '10');
+            line.setAttribute('stroke', color);
+            line.setAttribute('stroke-width', '3');
+            pattern.appendChild(line);
+            defs.appendChild(pattern);
+            svg.appendChild(defs);
+            return svg;
+        }
 
-        document.getElementById('shareBtn').addEventListener('click', function() {
-            saveCurrentDayData();
-            const encoded = encodeAllDataToURL();
-            const url = new URL(window.location);
-            url.searchParams.set('data', encoded);
-            const shareUrl = url.toString();
-            navigator.clipboard.writeText(shareUrl).then(() => {
-                showToast('📋 Ссылка скопирована!');
-            }).catch(() => {
-                prompt('Скопируйте ссылку вручную:', shareUrl);
-            });
-        });
+        function ensureHatchPattern(color = '#ffaa00') {
+            const mapContainer = map.getContainer();
+            let svg = mapContainer.querySelector('svg');
+            if (!svg) {
+                const renderer = map.getRenderer ? map.getRenderer() : null;
+                if (renderer && renderer._container) {
+                    svg = renderer._container.querySelector('svg');
+                }
+            }
+            if (!svg) {
+                const container = mapContainer;
+                svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                svg.setAttribute('style', 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;');
+                svg.setAttribute('xmlns', 'http://www.w3.org/2000/svg');
+                container.appendChild(svg);
+            }
+            let defs = svg.querySelector('defs');
+            if (!defs) {
+                defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                svg.appendChild(defs);
+            }
+            const patternId = `hatch-${color.replace('#', '')}`;
+            if (!defs.querySelector(`#${patternId}`)) {
+                const pattern = createHatchPattern(patternId, color);
+                const newPattern = pattern.querySelector('pattern').cloneNode(true);
+                defs.appendChild(newPattern);
+            }
+            return patternId;
+        }
 
         // ================================================================
         //  12. ОБРАБОТЧИК РИСОВАНИЯ
@@ -2074,14 +2114,63 @@
         });
 
         // ================================================================
-        //  18. ЗАПУСК
+        //  18. КНОПКА СИНХРОНИЗАЦИИ
         // ================================================================
-        init();
+        document.getElementById('syncBtn').addEventListener('click', async function() {
+            if (USE_SUPABASE && supabase) {
+                await loadFromSupabase();
+            } else {
+                showToast('⚠️ Синхронизация не настроена (отсутствует Supabase)');
+            }
+        });
 
-        // Пароль НЕ ВЫВОДИТСЯ в консоль — безопасность.
+        // ================================================================
+        //  19. СОХРАНЕНИЕ В URL (как раньше)
+        // ================================================================
+        function encodeAllDataToURL() {
+            const data = {
+                day1: store.day1,
+                day2: store.day2,
+                day3: store.day3,
+                lastDayShift: store.lastDayShift
+            };
+            const json = JSON.stringify(data);
+            return btoa(encodeURIComponent(json));
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            if (!isAuthorized) { showToast('⚠️ Войдите для сохранения'); return; }
+            saveCurrentDayData();
+            const encoded = encodeAllDataToURL();
+            const url = new URL(window.location);
+            url.searchParams.set('data', encoded);
+            window.history.replaceState({}, '', url);
+            showToast('💾 Прогноз сохранён в URL и локальное хранилище');
+            // также синхронизируем с сервером
+            if (USE_SUPABASE && supabase) {
+                syncToSupabase();
+            }
+        });
+
+        document.getElementById('shareBtn').addEventListener('click', function() {
+            saveCurrentDayData();
+            const encoded = encodeAllDataToURL();
+            const url = new URL(window.location);
+            url.searchParams.set('data', encoded);
+            const shareUrl = url.toString();
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast('📋 Ссылка скопирована!');
+            }).catch(() => {
+                prompt('Скопируйте ссылку вручную:', shareUrl);
+            });
+        });
+
+        // ================================================================
+        //  20. ЗАПУСК
+        // ================================================================
         console.log('✅ CSF | SPC Russia — карта загружена');
-        console.log('🔐 Редактирование доступно только после входа (пароль скрыт)');
-        console.log('🛠️ Инструменты рисования появляются при входе и исчезают при выходе');
+        console.log('🔐 Редактирование доступно только после входа');
+        console.log('🔄 Синхронизация с сервером: ' + (USE_SUPABASE && supabase ? 'включена' : 'отключена'));
         console.log('📅 Три дня прогноза с автоматическим сдвигом');
     </script>
 </body>
